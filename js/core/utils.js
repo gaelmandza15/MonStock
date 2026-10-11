@@ -8,13 +8,14 @@ const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate()
 
 function fmtMoney(v){
   const dec = db.settings.decimals ? 2 : 0;
-  return new Intl.NumberFormat('fr-FR',{minimumFractionDigits:dec, maximumFractionDigits:dec})
+  return new Intl.NumberFormat(localeOf(),{minimumFractionDigits:dec, maximumFractionDigits:dec})
     .format(Math.round(v * 10**dec) / 10**dec) + ' ' + db.settings.currency;
 }
-function fmtQty(q){ return Number.isInteger(q) ? String(q) : new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(q); }
+function fmtQty(q){ return Number.isInteger(q) ? String(q) : new Intl.NumberFormat(localeOf(),{maximumFractionDigits:2}).format(q); }
 function fmtDate(iso){
-  return new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}) + ' · ' +
-         new Date(iso).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const L = localeOf();
+  return new Date(iso).toLocaleDateString(L,{day:'numeric',month:'short'}) + ' · ' +
+         new Date(iso).toLocaleTimeString(L,{hour:'2-digit',minute:'2-digit'});
 }
 function icons(){ if(window.lucide) lucide.createIcons(); }
 function marginOf(p){ return p.cost > 0 ? (p.price - p.cost) / p.cost * 100 : null; }

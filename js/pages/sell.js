@@ -2,7 +2,7 @@
 function renderSell(){
   const cats = [...new Set(db.products.map(p=>p.category).filter(Boolean))].sort();
   const sel = $('#sell-cat-select');
-  sel.innerHTML = `<option value="">Toutes les catégories</option>` +
+  sel.innerHTML = `<option value="">${t('sell.allCategories')}</option>` +
     cats.map(c=>`<option value="${esc(c)}"${ui.sellCat===c?' selected':''}>${esc(c)}</option>`).join('');
   sel.value = ui.sellCat || '';
   const q = ui.sellSearch.toLowerCase();
@@ -17,9 +17,9 @@ function renderSell(){
       <p class="font-bold text-sm leading-snug line-clamp-2">${esc(p.name)}</p>
       <p class="text-[11px] text-muted mt-0.5">${esc(p.category||'')}</p>
       <p class="num font-extrabold text-accent mt-2">${fmtMoney(p.price)}</p>
-      <p class="text-[11px] font-semibold mt-1 ${out?'text-danger':'text-muted'}">${out?'Rupture':'Stock : '+fmtQty(p.stock)}</p></button>`;
+      <p class="text-[11px] font-semibold mt-1 ${out?'text-danger':'text-muted'}">${out?t('sell.outOfStock'):t('sell.stockPrefix', { qty: fmtQty(p.stock) })}</p></button>`;
   }).join('')
-  : `<div class="col-span-full py-12 text-center text-sm text-muted">Aucun produit ne correspond.</div>`;
+  : `<div class="col-span-full py-12 text-center text-sm text-muted">${t('sell.noMatch')}</div>`;
   renderCart();
 }
 
@@ -28,8 +28,8 @@ function renderCart(){
   if(!ui.cart.length){
     body.innerHTML = `<div class="py-8 text-center">
       <span class="w-12 h-12 rounded-2xl bg-paper grid place-items-center mx-auto"><i data-lucide="shopping-basket" class="w-6 h-6 text-muted"></i></span>
-      <p class="text-sm font-semibold mt-3">Panier vide</p>
-      <p class="text-xs text-muted mt-1">Touchez un produit pour commencer.</p></div>`;
+      <p class="text-sm font-semibold mt-3">${t('sell.emptyCart')}</p>
+      <p class="text-xs text-muted mt-1">${t('sell.emptyCartHint')}</p></div>`;
     footer.classList.add('hidden');
     $('#cart-total').textContent = '—';
     return;
@@ -71,20 +71,20 @@ function renderChange(){
   box.classList.remove('hidden');
   if(diff >= 0){
     box.className = 'mt-3 rounded-xl px-4 py-3 text-sm font-semibold bg-accent-soft flex items-center justify-between text-accent';
-    box.innerHTML = `<span class="flex items-center gap-1.5"><i data-lucide="hand-coins" class="w-4 h-4"></i>Monnaie à rendre</span><span class="num font-extrabold">${fmtMoney(diff)}</span>`;
+    box.innerHTML = `<span class="flex items-center gap-1.5"><i data-lucide="hand-coins" class="w-4 h-4"></i>${t('sell.changeDue')}</span><span class="num font-extrabold">${fmtMoney(diff)}</span>`;
   } else {
     box.className = 'mt-3 rounded-xl px-4 py-3 text-sm font-semibold bg-warn-soft flex items-center justify-between text-warn';
-    box.innerHTML = `<span class="flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i>Il manque</span><span class="num font-extrabold">${fmtMoney(-diff)}</span>`;
+    box.innerHTML = `<span class="flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i>${t('sell.missing')}</span><span class="num font-extrabold">${fmtMoney(-diff)}</span>`;
   }
   icons();
 }
 
 function sellAdd(id){
   const p = prod(id); if(!p) return;
-  if(p.stock <= 0) return toast(`« ${esc(p.name)} » est en rupture de stock.`, 'warn');
+  if(p.stock <= 0) return toast(t('sell.itemOutOfStock', { name: esc(p.name) }), 'warn');
   const line = ui.cart.find(l=>l.productId===id);
   if(line){
-    if(line.qty + 1 > p.stock) return toast(`Stock insuffisant : ${fmtQty(p.stock)} ${esc(p.unit||'')} disponible${p.stock>1?'s':''}.`, 'warn');
+    if(line.qty + 1 > p.stock) return toast(t('sell.insufficientStock', { qty: fmtQty(p.stock), unit: esc(p.unit||'') }), 'warn');
     line.qty += 1;
   } else ui.cart.push({ productId:id, qty:1 });
   renderSell();
@@ -92,29 +92,29 @@ function sellAdd(id){
 function cartSetQty(id, qty){
   const p = prod(id), line = ui.cart.find(l=>l.productId===id); if(!p || !line) return;
   if(isNaN(qty) || qty <= 0){ ui.cart = ui.cart.filter(l=>l.productId!==id); }
-  else { line.qty = Math.min(qty, p.stock); if(qty > p.stock) toast(`Limité au stock disponible (${fmtQty(p.stock)}).`, 'warn'); }
+  else { line.qty = Math.min(qty, p.stock); if(qty > p.stock) toast(t('sell.limitedToStock', { qty: fmtQty(p.stock) }), 'warn'); }
   renderSell();
 }
 function checkout(){
   if(!ui.cart.length) return;
   for(const l of ui.cart){
     const p = prod(l.productId);
-    if(!p || p.stock < l.qty) return toast('Stock insuffisant pour un article du panier.', 'warn');
+    if(!p || p.stock < l.qty) return toast(t('sell.cartItemShortage'), 'warn');
   }
   const total = cartTotal();
   const received = ui.cash === '' ? total : (parseFloat(ui.cash) || 0);
-  if(received < total) return toast('Le montant reçu est insuffisant pour valider.', 'warn');
+  if(received < total) return toast(t('sell.amountInsufficient'), 'warn');
   const saleId = uid(), now = new Date().toISOString();
   ui.cart.forEach(l=>{
     const p = prod(l.productId);
     p.stock -= l.qty;
-    db.movements.unshift({ id:uid(), type:'out', productId:p.id, qty:l.qty, unitPrice:p.price, date:now, saleId, note:'Vente' });
+    db.movements.unshift({ id:uid(), type:'out', productId:p.id, qty:l.qty, unitPrice:p.price, date:now, saleId, note:t('seed.saleNote') });
   });
   const change = received - total;
   ui.cart = []; ui.cash = ''; $('#cash-input').value = '';
   save(); renderPage();
   toast(change > 0.0001
-    ? `Vente validée · <span class="text-accent">Monnaie à rendre : ${fmtMoney(change)}</span>`
-    : 'Vente validée, stock mis à jour.');
+    ? t('sell.validatedChange', { amount: fmtMoney(change) })
+    : t('sell.validated'));
 }
 

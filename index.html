@@ -18,31 +18,32 @@
   <div class="px-5 pt-6 pb-5">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-2xl bg-accent text-white grid place-items-center font-extrabold text-lg">M</div>
-      <div class="min-w-0">
-        <p class="font-extrabold leading-tight">MonStock</p>
-        <p id="sb-shop" class="text-xs text-muted truncate">Ma Boutique</p>
+      <div class="min-w-0 flex-1">
+        <p class="font-extrabold leading-tight" data-i18n="app.name">MonStock</p>
+        <p id="sb-shop" class="text-xs text-muted truncate"></p>
       </div>
+      <span id="sb-lang" class="shrink-0"></span>
     </div>
   </div>
   <nav class="px-3 space-y-1" id="sb-nav">
     <a href="#" data-action="nav" data-page="dashboard" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold">
-      <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i>Tableau de bord</a>
+      <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i><span data-i18n="nav.dashboard">Tableau de bord</span></a>
     <a href="#" data-action="nav" data-page="products" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold">
-      <i data-lucide="package" class="w-[18px] h-[18px]"></i>Produits</a>
+      <i data-lucide="package" class="w-[18px] h-[18px]"></i><span data-i18n="nav.products">Produits</span></a>
     <a href="#" data-action="nav" data-page="sell" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold">
-      <i data-lucide="shopping-basket" class="w-[18px] h-[18px]"></i>Vendre</a>
+      <i data-lucide="shopping-basket" class="w-[18px] h-[18px]"></i><span data-i18n="nav.sell">Vendre</span></a>
     <a href="#" data-action="nav" data-page="movements" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold">
-      <i data-lucide="arrow-left-right" class="w-[18px] h-[18px]"></i>Mouvements</a>
+      <i data-lucide="arrow-left-right" class="w-[18px] h-[18px]"></i><span data-i18n="nav.movements">Mouvements</span></a>
     <a href="#" data-action="nav" data-page="settings" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold">
-      <i data-lucide="settings-2" class="w-[18px] h-[18px]"></i>Paramètres</a>
+      <i data-lucide="settings-2" class="w-[18px] h-[18px]"></i><span data-i18n="nav.settings">Paramètres</span></a>
   </nav>
   <div class="mt-auto p-4">
     <a href="#" data-action="nav" data-page="dashboard" class="block bg-accent-soft rounded-2xl p-4 transition">
-      <p class="text-[11px] font-bold uppercase tracking-wide text-accent/70">Valeur du stock</p>
+      <p id="sb-value-label" class="text-[11px] font-bold uppercase tracking-wide text-accent/70">Valeur du stock</p>
       <p id="sb-value" class="num text-lg font-extrabold text-accent mt-0.5">—</p>
       <p id="sb-refs" class="text-xs text-muted mt-0.5">—</p>
     </a>
-    <p class="text-[11px] text-muted/80 text-center mt-3">Données locales · aucun compte requis</p>
+    <p class="text-[11px] text-muted/80 text-center mt-3" data-i18n="app.tagline">Données locales · aucun compte requis</p>
   </div>
 </aside>
 <div id="overlay" data-action="close-sidebar" class="fixed inset-0 bg-ink/40 z-30 hidden lg:hidden"></div>
@@ -54,10 +55,11 @@
   <header class="lg:hidden sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-paper/85 backdrop-blur border-b border-line">
     <button data-action="open-sidebar" class="w-10 h-10 rounded-xl bg-white border border-line grid place-items-center">
       <i data-lucide="menu" class="w-5 h-5"></i></button>
-    <div class="min-w-0">
-      <p class="font-extrabold leading-tight">MonStock</p>
-      <p id="mb-shop" class="text-xs text-muted truncate">Ma Boutique</p>
+    <div class="min-w-0 flex-1">
+      <p class="font-extrabold leading-tight" data-i18n="app.name">MonStock</p>
+      <p id="mb-shop" class="text-xs text-muted truncate"></p>
     </div>
+    <span id="mb-lang" class="shrink-0"></span>
   </header>
 
   <main class="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-9">
@@ -296,6 +298,9 @@
 <div id="toasts" class="fixed bottom-5 right-5 z-[70] space-y-2.5 w-[min(92vw,360px)]"></div>
 <div id="layer"></div>
 
+<script src="js/i18n/fr.js"></script>
+<script src="js/i18n/en.js"></script>
+<script src="js/core/i18n.js"></script>
 <script src="js/core/state.js"></script>
 <script src="js/core/utils.js"></script>
 <script src="js/core/ui.js"></script>

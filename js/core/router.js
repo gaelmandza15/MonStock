@@ -2,7 +2,7 @@
 const PAGES = ['dashboard','products','sell','movements','settings'];
 
 function navigate(p){
-  page = p;
+  page = p; ui.confirmDel = null;
   PAGES.forEach(id => $('#page-'+id).classList.toggle('hidden', id !== p));
   document.querySelectorAll('.nav-item').forEach(a=>{
     const on = a.dataset.page === p;
@@ -15,14 +15,16 @@ function closeSidebar(){ $('#sidebar').classList.add('-translate-x-full'); $('#o
 function openSidebar(){ $('#sidebar').classList.remove('-translate-x-full'); $('#overlay').classList.remove('hidden'); }
 
 function updateChrome(){
+  /* Libellés de navigation (statiques, via data-i18n) + sélecteur de langue. */
+  applyStaticI18n();
   $('#sb-shop').textContent = db.settings.shopName;
   $('#mb-shop').textContent = db.settings.shopName;
+  $('#sb-value-label').textContent = t('sidebar.stockValueTitle');
   $('#sb-value').textContent = fmtMoney(stockValue());
-  $('#sb-refs').textContent = `${db.products.length} référence${db.products.length>1?'s':''} en stock`;
   const n = alerts().length;
-  if(n > 0){
-    $('#sb-refs').innerHTML += ` · <span class="text-warn font-bold">${n} alerte${n>1?'s':''}</span>`;
-  }
+  $('#sb-refs').innerHTML = t('sidebar.refs', {n:db.products.length}) +
+    (n > 0 ? ` · <span class="text-warn font-bold">${t('sidebar.alertsSuffix',{n})}</span>` : '');
+  renderLangSwitches();
 }
 
 function renderPage(){
@@ -31,4 +33,3 @@ function renderPage(){
   map[page]();
   icons();
 }
-

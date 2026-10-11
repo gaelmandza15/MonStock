@@ -20,20 +20,20 @@ function kpiCard(label, value, sub, icon, tone){
 }
 
 function renderDashboard(){
-  $('#dash-hello').textContent = 'Bonjour';
-  $('#dash-date').textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  $('#dash-hello').textContent = t('dash.hello');
+  $('#dash-date').textContent = new Date().toLocaleDateString(localeOf(),{weekday:'long', day:'numeric', month:'long', year:'numeric'});
   const al = alerts();
   $('#dash-kpis').innerHTML =
-    kpiCard('Valeur du stock', fmtMoney(stockValue()), 'au prix d\'achat', 'warehouse', {bg:'bg-accent-soft', fg:'text-accent'}) +
-    kpiCard('Ventes du jour', fmtMoney(salesToday()), `${todayMoves().length} article${todayMoves().length>1?'s':''} vendu${todayMoves().length>1?'s':''}`, 'banknote', {bg:'bg-accent-soft', fg:'text-accent'}) +
-    kpiCard('Bénéfice estimé', fmtMoney(profitToday()), 'marge sur ventes du jour', 'trending-up', {bg:'bg-accent-soft', fg:'text-accent'}) +
-    kpiCard('Alertes stock', String(al.length), al.length ? 'action requise' : 'tout va bien', 'bell-ring', {bg: al.length?'bg-warn-soft':'bg-accent-soft', fg: al.length?'text-warn':'text-accent'});
+    kpiCard(t('kpi.stockValue'), fmtMoney(stockValue()), t('kpi.stockValueSub'), 'warehouse', {bg:'bg-accent-soft', fg:'text-accent'}) +
+    kpiCard(t('kpi.salesToday'), fmtMoney(salesToday()), t('kpi.articlesSold', { n: todayMoves().length }), 'banknote', {bg:'bg-accent-soft', fg:'text-accent'}) +
+    kpiCard(t('kpi.profit'), fmtMoney(profitToday()), t('kpi.profitSub'), 'trending-up', {bg:'bg-accent-soft', fg:'text-accent'}) +
+    kpiCard(t('kpi.alerts'), String(al.length), al.length ? t('kpi.alertsAction') : t('kpi.alertsOk'), 'bell-ring', {bg: al.length?'bg-warn-soft':'bg-accent-soft', fg: al.length?'text-warn':'text-accent'});
   ['#dash-kpis [data-kpi]'].forEach(()=>{});
   document.querySelectorAll('#dash-kpis [data-kpi]').forEach(el=>{
     const label = el.dataset.kpi;
-    const v = label==='Valeur du stock' ? stockValue() : label==='Ventes du jour' ? salesToday()
-            : label==='Bénéfice estimé' ? profitToday() : al.length;
-    animateNum(el, v, n => label==='Alertes stock' ? String(Math.round(n)) : fmtMoney(n));
+    const v = label===t('kpi.stockValue') ? stockValue() : label===t('kpi.salesToday') ? salesToday()
+            : label===t('kpi.profit') ? profitToday() : al.length;
+    animateNum(el, v, n => label===t('kpi.alerts') ? String(Math.round(n)) : fmtMoney(n));
   });
   renderChart(); renderAlerts(); renderDashMoves();
 }
@@ -47,8 +47,8 @@ function renderChart(){
   $('#chart-total').textContent = 'Total : ' + fmtMoney(grand);
   const max = Math.max(...totals, 1);
   const W=560, H=210, padL=16, colW=(W-2*padL)/7, barW=Math.min(44, colW*.5);
-  const labels = days.map(d => d.toLocaleDateString('fr-FR',{weekday:'narrow'}));
-  const dateLbls = days.map(d => d.toLocaleDateString('fr-FR',{weekday:'long', day:'numeric', month:'long'}));
+  const labels = days.map(d => d.toLocaleDateString(localeOf(),{weekday:'narrow'}));
+  const dateLbls = days.map(d => d.toLocaleDateString(localeOf(),{weekday:'long', day:'numeric', month:'long'}));
   let bars = '';
   totals.forEach((v,i)=>{
     const h = v/max * 132, x = padL + i*colW + (colW-barW)/2, y = 176 - h;
@@ -65,7 +65,7 @@ function renderChart(){
     <svg viewBox="0 0 ${W} ${H}" class="w-full">${bars}</svg>
     <div id="chart-tip" class="absolute pointer-events-none opacity-0 transition-opacity bg-ink text-white text-xs font-semibold rounded-lg px-2.5 py-1.5 whitespace-nowrap"></div>
     <div class="flex justify-between mt-1 px-2 text-[10px] text-muted/70">
-      <span>${days[0].toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</span>
+      <span>${days[0].toLocaleDateString(localeOf(),{day:'numeric',month:'short'})}</span>
       <span>Aujourd'hui</span></div>`;
   const tip = $('#chart-tip'), wrap = $('#chart-wrap');
   wrap.querySelectorAll('.chart-hit').forEach(g=>{
@@ -98,22 +98,22 @@ function renderAlerts(){
       <div class="min-w-0 flex-1">
         <p class="text-sm font-bold truncate">${esc(p.name)}</p>
         <p class="text-xs font-semibold ${out?'text-danger':'text-warn'} mt-0.5">
-          ${out ? 'Rupture de stock' : `Plus que ${fmtQty(p.stock)} ${esc(p.unit||'')}`}</p>
+          ${out ? t('dash.outOfStock') : t('dash.remaining', { qty: fmtQty(p.stock), unit: esc(p.unit||'') })}</p>
       </div>
       <button data-action="quick-restock" data-id="${p.id}" class="shrink-0 text-xs font-bold text-accent hover:text-accent-dark bg-white border border-accent/25 rounded-lg px-3 py-1.5 flex items-center gap-1">
-        <i data-lucide="package-plus" class="w-3.5 h-3.5"></i>Réappro</button></div>`;
+        <i data-lucide="package-plus" class="w-3.5 h-3.5"></i>${t('dash.restockShort')}</button></div>`;
   }).join('');
 }
 
 function moveRow(m){
   const p = prod(m.productId);
-  const conf = { in:{l:'Entrée', c:'text-accent bg-accent-soft', i:'arrow-down-to-line'},
-                 out:{l:'Sortie', c:'text-info bg-info-soft', i:'arrow-up-from-line'},
-                 adj:{l:'Ajustement', c:'text-warn bg-warn-soft', i:'sliders-horizontal'} }[m.type];
+  const conf = { in:{l:t('movements.typeIn'), c:'text-accent bg-accent-soft', i:'arrow-down-to-line'},
+                 out:{l:t('movements.typeOut'), c:'text-info bg-info-soft', i:'arrow-up-from-line'},
+                 adj:{l:t('movements.typeAdj'), c:'text-warn bg-warn-soft', i:'sliders-horizontal'} }[m.type];
   return `<div class="flex items-center gap-3 py-3">
     <span class="w-9 h-9 rounded-xl ${conf.c} grid place-items-center shrink-0"><i data-lucide="${conf.i}" class="w-4 h-4"></i></span>
     <div class="min-w-0 flex-1">
-      <p class="text-sm font-bold truncate">${esc(p ? p.name : 'Produit supprimé')}</p>
+      <p class="text-sm font-bold truncate">${esc(p ? p.name : t('movements.deletedProduct'))}</p>
       <p class="text-xs text-muted mt-0.5">${fmtDate(m.date)}${m.note ? ' · ' + esc(m.note) : ''}</p></div>
     <div class="text-right shrink-0">
       <p class="num text-sm font-bold ${m.type==='adj' ? (m.qty>=0?'text-accent':'text-danger') : m.type==='in'?'text-accent':'text-ink'}">
@@ -124,6 +124,6 @@ function moveRow(m){
 function renderDashMoves(){
   const list = db.movements.slice(0, 6);
   $('#dash-moves').innerHTML = list.length ? list.map(moveRow).join('')
-    : `<p class="py-8 text-center text-sm text-muted">Aucun mouvement enregistré pour le moment.</p>`;
+    : `<p class="py-8 text-center text-sm text-muted">${t('dash.noMoves')}</p>`;
 }
 

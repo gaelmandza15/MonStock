@@ -1,0 +1,6 @@
+#!/bin/sh
+# Hook de pre-commit : bloque le commit si le vérificateur i18n détecte une anomalie.
+# Installer avec :  ln -sf ../../scripts/pre-commit .git/hooks/pre-commit
+# Résolution de la racine du dépôt (fonctionne depuis .git/hooks/pre-commit)
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+exec node "$REPO_ROOT/scripts/i18n-check.js" --staged

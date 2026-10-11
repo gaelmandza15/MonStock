@@ -3,17 +3,17 @@ function renderSettings(){
   $('#set-shop').value = db.settings.shopName;
   $('#set-threshold').value = db.settings.defaultThreshold;
   $('#set-decimals').value = db.settings.decimals;
-  $('#set-currency').innerHTML = CURRENCIES.map(c=>`<option value="${c.c}" data-d="${c.d}" ${c.c===db.settings.currency?'selected':''}>${c.label}</option>`).join('')
-    + (CURRENCIES.some(c=>c.c===db.settings.currency) ? '' : `<option value="${esc(db.settings.currency)}" selected>${esc(db.settings.currency)} (personnalisée)</option>`);
+  $('#set-currency').innerHTML = CURRENCIES.map(c=>`<option value="${c.c}" data-d="${c.d}" ${c.c===db.settings.currency?'selected':''}>${t(c.labelKey)}</option>`).join('')
+    + (CURRENCIES.some(c=>c.c===db.settings.currency) ? '' : `<option value="${esc(db.settings.currency)}" selected>${t('settings.customCurrency', { code: esc(db.settings.currency) })}</option>`);
 }
 function saveSettings(){
-  db.settings.shopName = $('#set-shop').value.trim() || 'Ma Boutique';
+  db.settings.shopName = $('#set-shop').value.trim() || t('seed.shopName');
   const sel = $('#set-currency');
   db.settings.currency = sel.value;
   const opt = sel.selectedOptions[0];
   db.settings.decimals = parseInt($('#set-decimals').value) || 0;
   db.settings.defaultThreshold = Math.max(0, parseInt($('#set-threshold').value) || 0);
-  save(); updateChrome(); toast('Paramètres enregistrés');
+  save(); updateChrome(); toast(t('settings.saved'));
 }
 
 function downloadFile(name, content, mime){
@@ -24,8 +24,8 @@ function downloadFile(name, content, mime){
 }
 const csvCell = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
 function exportCsv(rows, name){
-  if(!rows.length) return toast('Aucune donnée à exporter.', 'warn');
+  if(!rows.length) return toast(t('settings.noDataExport'), 'warn');
   downloadFile(name, '\uFEFF' + rows.map(r=>r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
-  toast('Fichier CSV téléchargé');
+  toast(t('settings.csvDownloaded'));
 }
 
