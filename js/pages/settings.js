@@ -3,8 +3,14 @@ function renderSettings(){
   $('#set-shop').value = db.settings.shopName;
   $('#set-threshold').value = db.settings.defaultThreshold;
   $('#set-decimals').value = db.settings.decimals;
-  $('#set-currency').innerHTML = CURRENCIES.map(c=>`<option value="${c.c}" data-d="${c.d}" ${c.c===db.settings.currency?'selected':''}>${t(c.labelKey)}</option>`).join('')
-    + (CURRENCIES.some(c=>c.c===db.settings.currency) ? '' : `<option value="${esc(db.settings.currency)}" selected>${t('settings.customCurrency', { code: esc(db.settings.currency) })}</option>`);
+  const known = CURRENCIES.some(c=>c.c===db.settings.currency);
+  let html = `<option value="" disabled${known?'':' selected'}>${t('settings.selectCurrency')}</option>`;
+  html += CURRENCY_GROUPS.map(g => { const ck = 'continent.' + g.id;
+      return `<optgroup label="${t(ck)}">` +
+      g.currencies.map(c=>`<option value="${c.c}" data-d="${c.d}" ${c.c===db.settings.currency?'selected':''}>${t(c.labelKey)}</option>`).join('') +
+      '</optgroup>'; }).join('');
+  if(!known) html += `<option value="${esc(db.settings.currency)}" selected>${t('settings.customCurrency', { code: esc(db.settings.currency) })}</option>`;
+  $('#set-currency').innerHTML = html;
 }
 function saveSettings(){
   db.settings.shopName = $('#set-shop').value.trim() || t('seed.shopName');

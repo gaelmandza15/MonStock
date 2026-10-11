@@ -3,14 +3,8 @@
    Tout le contenu visible passe par t('clé') et les dictionnaires js/i18n/. */
 const LS = 'monstock_v1';
 const LS_LANG = 'monstock_lang';
-/* Les libellés passent par des clés i18n : aucune chaîne affichable en dur ici. */
-const CURRENCIES = [
-  {c:'FCFA', d:0, labelKey:'currency.fcfa'}, {c:'GNF', d:0, labelKey:'currency.gnf'},
-  {c:'MGA', d:0, labelKey:'currency.mga'},   {c:'KMF', d:0, labelKey:'currency.kmf'},
-  {c:'MAD', d:2, labelKey:'currency.mad'},   {c:'DZD', d:2, labelKey:'currency.dzd'},
-  {c:'TND', d:2, labelKey:'currency.tnd'},   {c:'EUR', d:2, labelKey:'currency.eur'},
-  {c:'USD', d:2, labelKey:'currency.usd'},   {c:'NGN', d:2, labelKey:'currency.ngn'},
-];
+/* Les libellés passent par des clés i18n : aucune chaîne affichable en dur ici.
+   La liste complète des devises (groupées par continent) est dans js/config/currencies.js. */
 const UNIT_KEYS = ['units.piece','units.pack','units.carton','units.bag','units.jerrycan',
                    'units.box','units.kg','units.liter','units.meter','units.bar','units.ten'];
 
