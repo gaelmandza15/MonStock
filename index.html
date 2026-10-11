@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MonStock — Gestion de stock</title>
+<title>KlarStock — Gestion de stock</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -42,9 +42,9 @@
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-[264px] bg-panel border-r border-line flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
   <div class="px-5 pt-6 pb-5">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-2xl bg-accent text-white grid place-items-center font-extrabold text-lg">M</div>
+      <div class="w-10 h-10 rounded-2xl bg-accent text-white grid place-items-center font-extrabold text-lg">K</div>
       <div class="min-w-0 flex-1">
-        <p class="font-extrabold leading-tight" data-i18n="app.name">MonStock</p>
+        <p class="font-extrabold leading-tight" data-i18n="app.name">KlarStock</p>
         <p id="sb-shop" class="text-xs text-muted truncate"></p>
       </div>
       <span id="sb-lang" class="shrink-0"></span>
@@ -83,7 +83,7 @@
     <button data-action="open-sidebar" class="w-10 h-10 rounded-xl bg-white border border-line grid place-items-center">
       <i data-lucide="menu" class="w-5 h-5"></i></button>
     <div class="min-w-0 flex-1">
-      <p class="font-extrabold leading-tight" data-i18n="app.name">MonStock</p>
+      <p class="font-extrabold leading-tight" data-i18n="app.name">KlarStock</p>
       <p id="mb-shop" class="text-xs text-muted truncate"></p>
     </div>
     <span id="mb-lang" class="shrink-0"></span>
@@ -368,9 +368,9 @@
         <div class="space-y-4">
           <div class="bg-white rounded-3xl p-6">
             <h2 class="font-bold flex items-center gap-2"><i data-lucide="database" class="w-[18px] h-[18px] text-accent"></i><span data-i18n="settings.storageCard">Stockage SQLite</span></h2>
-            <p class="text-xs text-muted mt-1.5" data-i18n="settings.storageHint">Vos données sont enregistrées dans une base SQLite (monstock.db) sur cet appareil. Exportez régulièrement le fichier de base.</p>
+            <p class="text-xs text-muted mt-1.5" data-i18n="settings.storageHint">Vos données sont enregistrées dans une base SQLite (klarstock.db) sur cet appareil. Exportez régulièrement le fichier de base.</p>
             <div class="grid grid-cols-2 gap-2.5 mt-4">
-              <button data-action="export-db" class="flex items-center gap-2 border border-line bg-paper hover:bg-accent-soft rounded-xl px-3.5 py-2.5 text-sm font-semibold"><i data-lucide="database-backup" class="w-4 h-4"></i><span data-i18n="settings.exportDb">Base monstock.db</span></button>
+              <button data-action="export-db" class="flex items-center gap-2 border border-line bg-paper hover:bg-accent-soft rounded-xl px-3.5 py-2.5 text-sm font-semibold"><i data-lucide="database-backup" class="w-4 h-4"></i><span data-i18n="settings.exportDb">Base klarstock.db</span></button>
               <button data-action="import-db" class="flex items-center gap-2 border border-line bg-paper hover:bg-accent-soft rounded-xl px-3.5 py-2.5 text-sm font-semibold"><i data-lucide="database-zap" class="w-4 h-4"></i><span data-i18n="settings.importDb">Restaurer .db</span></button>
             </div>
             <p id="storage-info" class="text-xs text-muted mt-3"></p>

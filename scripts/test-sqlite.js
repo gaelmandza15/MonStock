@@ -71,7 +71,7 @@ global.Blob = class { constructor(p){ this.parts = p; } };
   const bytes = await dbExportDb();
   check('export .db non vide', bytes.length > 400 && String.fromCharCode(...bytes.slice(0,7)) === 'SQLite ');
   /* vérifie que les octets sont bien relus dans IndexedDB (simule un rechargement de page) */
-  const idbBytes = await idbGet('monstock.db');
+  const idbBytes = await idbGet('klarstock.db');
   check('octets persistes dans IndexedDB', !!idbBytes && idbBytes.length === bytes.length);
   sqliteDb.close(); sqliteDb = null;
   sqliteDb = new SQL.Database(idbBytes);             /* reopen depuis IndexedDB */
@@ -82,14 +82,14 @@ global.Blob = class { constructor(p){ this.parts = p; } };
   /* ── 4. migration depuis localStorage ── */
   sqliteDb.close(); sqliteDb = null;
   const legacy = seed(true); legacy.settings.shopName = 'LEGACY-SHOP';
-  localStorage.setItem('monstock_v1', JSON.stringify(legacy));
-  localStorage.removeItem('monstock_migrated_v1');   /* simule un utilisateur pré-SQLite */
-  localStorage.removeItem('monstock_migrating_v1');
+  localStorage.setItem('klarstock_v1', JSON.stringify(legacy));
+  localStorage.removeItem('klarstock_migrated_v1');   /* simule un utilisateur pré-SQLite */
+  localStorage.removeItem('klarstock_migrating_v1');
   await openIdb().then(idb => new Promise(res => { const tx=idb.transaction('files','readwrite'); tx.objectStore('files').clear(); tx.oncomplete=res; }));
   await initSqlite();
   const migrated = dbLoad();
   check('migration localStorage -> SQLite', migrated.settings.shopName === 'LEGACY-SHOP' && migrated.products.length === legacy.products.length);
-  check('flag migre pose', localStorage.getItem('monstock_migrated_v1') === '1');
+  check('flag migre pose', localStorage.getItem('klarstock_migrated_v1') === '1');
 
   /* ── 5. suppression en cascade (ON DELETE CASCADE) ── */
   const p0 = migrated.products[0];
@@ -100,7 +100,7 @@ global.Blob = class { constructor(p){ this.parts = p; } };
   /* ── 6. repli si SQLite indisponible ── */
   sqliteDb.close(); sqliteDb = null;
   await dbSave({settings:{shopName:'X'},products:[],movements:[],invoices:[]});
-  check('repli localStorage quand sqliteDb=null', !!localStorage.getItem('monstock_v1'));
+  check('repli localStorage quand sqliteDb=null', !!localStorage.getItem('klarstock_v1'));
 
   console.log(failures ? `\n${failures} echec(s)` : '\nTous les tests SQLite sont passes.');
   process.exit(failures ? 1 : 0);

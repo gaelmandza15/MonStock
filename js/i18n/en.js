@@ -4,7 +4,7 @@
    - les textes sont écrits sans lettres accentuées,
    - aucun symbole ou code monétaire en dur : la devise vient des réglages. */
 const I18N_EN = {
-  "app.name": "MonStock",
+  "app.name": "KlarStock",
   "app.tagline": "Local data · no account required",
   "nav.dashboard": "Dashboard",
   "nav.products": "Products",
@@ -342,8 +342,8 @@ const I18N_EN = {
   "settings.invalidFile": "Invalid file: restore failed.",
   "settings.noDataExport": "No data to export.",
   "settings.storageCard": "SQLite storage",
-  "settings.storageHint": "Your data is stored in a SQLite database (monstock.db) on this device. Export the database file regularly.",
-  "settings.exportDb": "Database monstock.db",
+  "settings.storageHint": "Your data is stored in a SQLite database (klarstock.db) on this device. Export the database file regularly.",
+  "settings.exportDb": "Database klarstock.db",
   "settings.importDb": "Restore .db",
   "settings.dbDownloaded": "SQLite database downloaded",
   "settings.dbRestored": "SQLite database restored",

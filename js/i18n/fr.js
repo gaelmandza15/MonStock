@@ -1,6 +1,6 @@
 /* ════════════════ Dictionnaire français (langue de référence) ════════════════ */
 const I18N_FR = {
-  'app.name': 'MonStock',
+  'app.name': 'KlarStock',
   'app.tagline': 'Données locales · aucun compte requis',
 
   'nav.dashboard': 'Tableau de bord',
@@ -348,8 +348,8 @@ const I18N_FR = {
   'settings.invalidFile': 'Fichier invalide : restauration impossible.',
   'settings.noDataExport': 'Aucune donnée à exporter.',
   'settings.storageCard': 'Stockage SQLite',
-  'settings.storageHint': 'Vos données sont enregistrées dans une base SQLite (monstock.db) sur cet appareil. Exportez régulièrement le fichier de base.',
-  'settings.exportDb': 'Base monstock.db',
+  'settings.storageHint': 'Vos données sont enregistrées dans une base SQLite (klarstock.db) sur cet appareil. Exportez régulièrement le fichier de base.',
+  'settings.exportDb': 'Base klarstock.db',
   'settings.importDb': 'Restaurer .db',
   'settings.dbDownloaded': 'Base SQLite téléchargée',
   'settings.dbRestored': 'Base SQLite restaurée',

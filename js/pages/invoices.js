@@ -334,5 +334,5 @@ function exportInvoicesCsv(){
   const rows = db.invoices.slice().sort((a,b) => new Date(b.date) - new Date(a.date))
     .map(i => [i.number, fmtDate(i.date), i.customer, invStatusLabel(i.status),
                i.lines.reduce((s,l) => s + l.qty, 0), Math.round(invDisplayTotal(i) * 100) / 100]);
-  exportCsv([header, ...rows], 'monstock-factures.csv');
+  exportCsv([header, ...rows], 'klarstock-factures.csv');
 }

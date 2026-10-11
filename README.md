@@ -1,10 +1,10 @@
-# MonStock
+# KlarStock
 
-**MonStock est une application de gestion de stock et de caisse pour petites boutiques, marchés et quincailleries.** Elle fonctionne entièrement dans le navigateur : aucun serveur, aucun compte, aucune base distante. Les données (produits, ventes, factures, mouvements) sont stockées dans une **base SQLite réelle** (`sql.js`/WASM), persistée sous forme de fichier `monstock.db` dans l'IndexedDB du navigateur — avec repli automatique sur le `localStorage` si SQLite est indisponible.
+**KlarStock est une application de gestion de stock et de caisse pour petites boutiques, marchés et quincailleries.** Elle fonctionne entièrement dans le navigateur : aucun serveur, aucun compte, aucune base distante. Les données (produits, ventes, factures, mouvements) sont stockées dans une **base SQLite réelle** (`sql.js`/WASM), persistée sous forme de fichier `klarstock.db` dans l'IndexedDB du navigateur — avec repli automatique sur le `localStorage` si SQLite est indisponible.
 
 Pensée pour les commerçants d'Afrique francophone (devise par défaut : FCFA), elle est en réalité internationale : **145 devises groupées par continent** et **2 langues (français / anglais)** sont embarquées.
 
-## À qui s'adresse MonStock ?
+## À qui s'adresse KlarStock ?
 
 Aux vendeurs qui tiennent leur stock « à la main » (cahier, Excel) et veulent :
 
@@ -12,7 +12,7 @@ Aux vendeurs qui tiennent leur stock « à la main » (cahier, Excel) et veulent
 - **encaisser une vente** en quelques secondes sur un écran tactile ou une souris ;
 - éditer une **facture au format ticket de caisse 80 mm**, imprimable sur n'importe quelle imprimante thermique POS (Epson, Xprinter…) ou sur papier classique ;
 - garder un **historique complet des entrées/sorties** de marchandises ;
-- exporter leurs données (CSV / JSON) **ou le fichier de base `monstock.db`** lui-même, sans dépendre d'un service tiers.
+- exporter leurs données (CSV / JSON) **ou le fichier de base `klarstock.db`** lui-même, sans dépendre d'un service tiers.
 
 ## Fonctionnalités
 
@@ -27,13 +27,13 @@ Aux vendeurs qui tiennent leur stock « à la main » (cahier, Excel) et veulent
 
 ## Stockage des données (SQLite)
 
-Depuis la version actuelle, MonStock utilise une **vraie base SQLite** exécutée dans le navigateur grâce à [sql.js](https://sql.js.org) (moteur SQLite compilé en WebAssembly) :
+Depuis la version actuelle, KlarStock utilise une **vraie base SQLite** exécutée dans le navigateur grâce à [sql.js](https://sql.js.org) (moteur SQLite compilé en WebAssembly) :
 
 - **Schéma relationnel** en 5 tables : `products`, `movements`, `invoices`, `invoice_items`, `settings` (+ table interne `_meta`).
-- Le fichier `monstock.db` (export binaire réel de la base) est persisté dans l'**IndexedDB** du navigateur ; chaque écriture y est synchronisée.
-- **Migration automatique** : au premier lancement après la mise à jour, les données existantes du `localStorage` sont importées dans SQLite, puis le drapeau `monstock_migrated_v1` est posé (uniquement après ouverture réussie de la base).
+- Le fichier `klarstock.db` (export binaire réel de la base) est persisté dans l'**IndexedDB** du navigateur ; chaque écriture y est synchronisée.
+- **Migration automatique** : au premier lancement après la mise à jour, les données existantes du `localStorage` sont importées dans SQLite, puis le drapeau `klarstock_migrated_v1` est posé (uniquement après ouverture réussie de la base).
 - **Repli (fallback)** : si la WASM ne peut pas être chargée (contexte sans réseau après purge du cache, navigateur très ancien…), l'application continue de fonctionner normalement en mode `localStorage`.
-- **Export / Import `.db`** depuis les Paramètres : la base peut être sauvegardée sous forme de fichier `.db` (à ouvrir avec n'importe quel client SQLite : `sqlite3 monstock.db`) et restaurée sur un autre poste.
+- **Export / Import `.db`** depuis les Paramètres : la base peut être sauvegardée sous forme de fichier `.db` (à ouvrir avec n'importe quel client SQLite : `sqlite3 klarstock.db`) et restaurée sur un autre poste.
 - Tests d'intégration : `node scripts/test-sqlite.js` (16 scénarios : écriture, round-trips, migration, export, persistance IndexedDB, repli).
 
 ## Architecture technique

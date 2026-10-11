@@ -1,10 +1,10 @@
 /* ════════════════ 1. ÉTAT & PERSISTANCE ════════════════ */
 /* Règle i18n : aucun texte destinataire avec accents ni devise en dur dans les modules JS.
    Tout le contenu visible passe par t('clé') et les dictionnaires js/i18n/.
-   Persistance principale : base SQLite (js/core/sqlite.js, fichier monstock.db
+   Persistance principale : base SQLite (js/core/sqlite.js, fichier klarstock.db
    dans IndexedDB). localStorage ne sert plus que de repli et pour la langue. */
-const LS = 'monstock_v1';
-const LS_LANG = 'monstock_lang';
+const LS = 'klarstock_v1';
+const LS_LANG = 'klarstock_lang';
 const CDN_SQLJS = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/';
 /* Les libellés passent par des clés i18n : aucune chaîne affichable en dur ici.
    La liste complète des devises (groupées par continent) est dans js/config/currencies.js. */

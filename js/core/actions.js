@@ -44,14 +44,14 @@ document.addEventListener('click', async e=>{
     case 'mv-type': ui.mvType = el.dataset.v; renderMovements(); icons(); break;
 
     case 'save-settings': saveSettings(); break;
-    case 'export-json': downloadFile('monstock-sauvegarde.json', JSON.stringify(db, null, 2), 'application/json'); toast(t('settings.jsonDownloaded')); break;
+    case 'export-json': downloadFile('klarstock-sauvegarde.json', JSON.stringify(db, null, 2), 'application/json'); toast(t('settings.jsonDownloaded')); break;
     case 'import-json': $('#import-file').click(); break;
     case 'export-db': {
       if(!sqliteDb){ toast(t('settings.sqliteUnavailable'), 'warn'); break; }
       const bytes = await dbExportDb();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([bytes], {type:'application/vnd.sqlite3'}));
-      a.download = 'monstock.db'; a.click();
+      a.download = 'klarstock.db'; a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
       toast(t('settings.dbDownloaded')); break;
     }
@@ -59,12 +59,12 @@ document.addEventListener('click', async e=>{
     case 'export-products-csv':
       exportCsv([t('csv.productsHeader').split(';'),
         ...db.products.map(p=>[p.name,p.category,p.sku,p.unit,p.cost,p.price,p.stock,p.threshold??db.settings.defaultThreshold])],
-        'monstock-produits.csv'); break;
+        'klarstock-produits.csv'); break;
     case 'export-sales-csv': {
       const sales = db.movements.filter(m=>m.type==='out' && m.saleId);
       exportCsv([t('csv.salesHeader').split(';'),
         ...sales.map(m=>[fmtDate(m.date), '#'+m.saleId.slice(-4), prod(m.productId)?.name||'', m.qty, m.unitPrice, m.qty*m.unitPrice])],
-        'monstock-ventes.csv'); break;
+        'klarstock-ventes.csv'); break;
     }
     case 'reset-data': openModal(`${modalHeader(t('reset.title'), t('reset.sub'))}
       <div class="px-6 pb-6 pt-3 space-y-2.5">

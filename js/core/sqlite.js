@@ -1,11 +1,11 @@
 /* ════════════════ SQLITE — moteur de persistance ════════════════ */
-/* Stockage principal : base SQLite (sql.js, WASM) dont le fichier monstock.db
+/* Stockage principal : base SQLite (sql.js, WASM) dont le fichier klarstock.db
    est conservé dans IndexedDB. La page d'accueil reste localStorage (loadLang).
    API publique : initSqlite(), dbLoad(), dbSave(), dbExportDb(), dbImportDb(file),
                   dbReset(), dbStorageInfo(). */
 
 const APP_SCHEMA = 1;
-const LS_MIGRATED = 'monstock_migrated_v1';
+const LS_MIGRATED = 'klarstock_migrated_v1';
 let SQL = null;          /* module sql.js chargé */
 let sqliteDb = null;     /* instance SQLite ouverte */
 let idbPromise = null;   /* connexion IndexedDB singleton */
@@ -60,7 +60,7 @@ function getMeta(k){
 function openIdb(){
   if(idbPromise) return idbPromise;
   idbPromise = new Promise((resolve, reject)=>{
-    const req = indexedDB.open('monstock', 1);
+    const req = indexedDB.open('klarstock', 1);
     req.onupgradeneeded = ()=>{ req.result.createObjectStore('files'); };
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = ()=> reject(req.error);
@@ -88,7 +88,7 @@ async function idbPut(key, val){
 async function initSqlite(){
   if(!window.initSqlJs) throw new Error('sql.js indisponible');
   if(!SQL) SQL = await window.initSqlJs({ locateFile: f => CDN_SQLJS + f });
-  let bytes = await idbGet('monstock.db');
+  let bytes = await idbGet('klarstock.db');
   let migratedNow = false;
   if(!bytes && !localStorage.getItem(LS_MIGRATED)){
     const raw = localStorage.getItem(LS);
@@ -181,7 +181,7 @@ function dbLoad(){ return sqliteDb ? readFullDb() : null; }
 
 async function persist(){
   if(!sqliteDb) return;
-  await idbPut('monstock.db', sqliteDb.export());
+  await idbPut('klarstock.db', sqliteDb.export());
 }
 
 async function dbSave(data){
