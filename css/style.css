@@ -1,0 +1,17 @@
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#D9D3C5;border-radius:8px;border:3px solid #F6F4EF}
+  ::-webkit-scrollbar-track{background:transparent}
+  html{scroll-behavior:smooth}
+  body{-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2368766E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .8rem center;-webkit-appearance:none;appearance:none}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes slideIn{from{transform:translateX(100%)}to{transform:none}}
+  @keyframes popIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes toastIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .anim-page{animation:fadeUp .28s ease both}
+  .anim-drawer{animation:slideIn .3s cubic-bezier(.32,.72,.28,1) both}
+  .anim-modal{animation:popIn .24s cubic-bezier(.32,.72,.28,1) both}
+  .anim-toast{animation:toastIn .28s ease both}
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,107,74,.18);border-color:#166B4A}
+  button{transition:all .16s ease}
