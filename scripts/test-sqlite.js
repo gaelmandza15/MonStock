@@ -30,7 +30,7 @@ global.Blob = class { constructor(p){ this.parts = p; } };
 
   /* Charge les modules dans l'ordre réel de index.html */
   const files = ['js/i18n/fr.js','js/i18n/en.js','js/core/i18n.js','js/config/currencies.js',
-                 'js/core/sqlite.js','js/core/state.js'];
+                 'js/core/storage.js','js/core/sqlite.js','js/core/state.js'];
   for(const f of files){
     const code = fs.readFileSync(path.join(ROOT,f),'utf8');
     vm.runInThisContext(code, { filename: f });
