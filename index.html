@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
 <script src="js/config/tailwind.config.js"></script>
 <script src="js/config/currencies.js"></script>
 <link rel="stylesheet" href="css/style.css">
@@ -366,7 +367,17 @@
         </div>
         <div class="space-y-4">
           <div class="bg-white rounded-3xl p-6">
-            <h2 class="font-bold flex items-center gap-2"><i data-lucide="database" class="w-[18px] h-[18px] text-accent"></i>Sauvegarde & données</h2>
+            <h2 class="font-bold flex items-center gap-2"><i data-lucide="database" class="w-[18px] h-[18px] text-accent"></i><span data-i18n="settings.storageCard">Stockage SQLite</span></h2>
+            <p class="text-xs text-muted mt-1.5" data-i18n="settings.storageHint">Vos données sont enregistrées dans une base SQLite (monstock.db) sur cet appareil. Exportez régulièrement le fichier de base.</p>
+            <div class="grid grid-cols-2 gap-2.5 mt-4">
+              <button data-action="export-db" class="flex items-center gap-2 border border-line bg-paper hover:bg-accent-soft rounded-xl px-3.5 py-2.5 text-sm font-semibold"><i data-lucide="database-backup" class="w-4 h-4"></i><span data-i18n="settings.exportDb">Base monstock.db</span></button>
+              <button data-action="import-db" class="flex items-center gap-2 border border-line bg-paper hover:bg-accent-soft rounded-xl px-3.5 py-2.5 text-sm font-semibold"><i data-lucide="database-zap" class="w-4 h-4"></i><span data-i18n="settings.importDb">Restaurer .db</span></button>
+            </div>
+            <p id="storage-info" class="text-xs text-muted mt-3"></p>
+            <input id="import-db-file" type="file" accept=".db,application/vnd.sqlite3,application/x-sqlite3" class="hidden">
+          </div>
+          <div class="bg-white rounded-3xl p-6">
+            <h2 class="font-bold flex items-center gap-2"><i data-lucide="hard-drive" class="w-[18px] h-[18px] text-accent"></i>Sauvegarde & données</h2>
             <p class="text-xs text-muted mt-1.5">Vos données restent sur cet appareil. Exportez régulièrement une sauvegarde.</p>
             <div class="grid grid-cols-2 gap-2.5 mt-4">
               <button data-action="export-json" class="flex items-center gap-2 border border-line bg-paper hover:bg-accent-soft rounded-xl px-3.5 py-2.5 text-sm font-semibold"><i data-lucide="download" class="w-4 h-4"></i>Sauvegarde JSON</button>
@@ -394,6 +405,7 @@
 <script src="js/i18n/fr.js"></script>
 <script src="js/i18n/en.js"></script>
 <script src="js/core/i18n.js"></script>
+<script src="js/core/sqlite.js"></script>
 <script src="js/core/state.js"></script>
 <script src="js/core/utils.js"></script>
 <script src="js/core/ui.js"></script>

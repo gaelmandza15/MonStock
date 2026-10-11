@@ -1,14 +1,18 @@
 /* ════════════════ 1. ÉTAT & PERSISTANCE ════════════════ */
 /* Règle i18n : aucun texte destinataire avec accents ni devise en dur dans les modules JS.
-   Tout le contenu visible passe par t('clé') et les dictionnaires js/i18n/. */
+   Tout le contenu visible passe par t('clé') et les dictionnaires js/i18n/.
+   Persistance principale : base SQLite (js/core/sqlite.js, fichier monstock.db
+   dans IndexedDB). localStorage ne sert plus que de repli et pour la langue. */
 const LS = 'monstock_v1';
 const LS_LANG = 'monstock_lang';
+const CDN_SQLJS = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/';
 /* Les libellés passent par des clés i18n : aucune chaîne affichable en dur ici.
    La liste complète des devises (groupées par continent) est dans js/config/currencies.js. */
 const UNIT_KEYS = ['units.piece','units.pack','units.carton','units.bag','units.jerrycan',
                    'units.box','units.kg','units.liter','units.meter','units.bar','units.ten'];
 
-let db = load() || seed(true);
+let db = load();
+if(!db){ db = seed(true); }
 if(!Array.isArray(db.invoices)) db.invoices = [];   /* migration anciennes sauvegardes */
 if(db.settings.taxRate == null) db.settings.taxRate = 0;
 let page = 'dashboard';
@@ -17,10 +21,18 @@ const ui = { prodSearch:'', prodCat:'', prodSort:'name', mvType:'all', mvRange:3
              invSearch:'', invStatus:'all' };
 const prevKpi = {};
 
-function save(){ localStorage.setItem(LS, JSON.stringify(db)); }
+/* Chargement initial : localStorage (repli / avant migration SQLite). */
+function save(){ dbSave(db); }
 function saveLang(){ localStorage.setItem(LS_LANG, lang); }
 function load(){ try{ const r = localStorage.getItem(LS); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* Remplacement de la base en mémoire par un objet importé/restauré. */
+function replaceDb(data){
+  db = data;
+  if(!Array.isArray(db.invoices)) db.invoices = [];
+  if(db.settings.taxRate == null) db.settings.taxRate = 0;
+}
 
 function seed(demo){
   const s = { settings:{ shopName:t('seed.shopName'), currency:'FCFA', decimals:0, defaultThreshold:5,

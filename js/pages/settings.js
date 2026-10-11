@@ -8,6 +8,7 @@ function renderSettings(){
   if(email) email.value = db.settings.shopEmail || '';
   if(tax) tax.value = db.settings.taxRate || 0;
   $('#set-decimals').value = db.settings.decimals;
+  const sto = $('#storage-info'); if(sto) refreshStorageInfo();
   const known = CURRENCIES.some(c=>c.c===db.settings.currency);
   let html = `<option value="" disabled${known?'':' selected'}>${t('settings.selectCurrency')}</option>`;
   html += CURRENCY_GROUPS.map(g => { const ck = 'continent.' + g.id;
@@ -30,6 +31,17 @@ function saveSettings(){
   db.settings.shopEmail   = email ? email.value.trim() : '';
   db.settings.taxRate     = tax ? Math.max(0, Math.min(100, parseFloat(tax.value) || 0)) : 0;
   save(); updateChrome(); toast(t('settings.saved'));
+  refreshStorageInfo();
+}
+
+/* Indicateur d'espace occupé par la base SQLite (navigateur). */
+async function refreshStorageInfo(){
+  const el = $('#storage-info'); if(!el) return;
+  const info = await dbStorageInfo();
+  if(!info){ el.textContent = ''; return; }
+  const fmtB = n => n >= 1048576 ? (n/1048576).toFixed(1) + ' MB'
+                : n >= 1024 ? Math.round(n/1024) + ' KB' : n + ' B';
+  el.textContent = t('settings.storageUsed', { used: fmtB(info.usage), quota: fmtB(info.quota) });
 }
 
 function downloadFile(name, content, mime){

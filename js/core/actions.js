@@ -1,5 +1,5 @@
 /* ════════════════ 11. ÉVÉNEMENTS ════════════════ */
-document.addEventListener('click', e=>{
+document.addEventListener('click', async e=>{
   const el = e.target.closest('[data-action]');
   if(!el) return;
   const a = el.dataset.action, id = el.dataset.id;
@@ -46,6 +46,16 @@ document.addEventListener('click', e=>{
     case 'save-settings': saveSettings(); break;
     case 'export-json': downloadFile('monstock-sauvegarde.json', JSON.stringify(db, null, 2), 'application/json'); toast(t('settings.jsonDownloaded')); break;
     case 'import-json': $('#import-file').click(); break;
+    case 'export-db': {
+      if(!sqliteDb){ toast(t('settings.sqliteUnavailable'), 'warn'); break; }
+      const bytes = await dbExportDb();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([bytes], {type:'application/vnd.sqlite3'}));
+      a.download = 'monstock.db'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+      toast(t('settings.dbDownloaded')); break;
+    }
+    case 'import-db': $('#import-db-file').click(); break;
     case 'export-products-csv':
       exportCsv([t('csv.productsHeader').split(';'),
         ...db.products.map(p=>[p.name,p.category,p.sku,p.unit,p.cost,p.price,p.stock,p.threshold??db.settings.defaultThreshold])],
@@ -61,8 +71,8 @@ document.addEventListener('click', e=>{
         <button data-action="load-demo" class="w-full bg-accent hover:bg-accent-dark text-white font-bold text-sm py-3 rounded-xl">${t('reset.loadDemo')}</button>
         <button data-action="wipe-all" class="w-full bg-danger hover:brightness-95 text-white font-bold text-sm py-3 rounded-xl">${t('reset.wipeAll')}</button>
         <button data-action="close-layer" class="w-full border border-line text-muted hover:text-ink font-semibold text-sm py-2.5 rounded-xl">${t('form.cancel')}</button></div>`); break;
-    case 'load-demo': db = seed(true); save(); closeLayer(); navigate('dashboard'); toast(t('reset.demoLoaded')); break;
-    case 'wipe-all': db = seed(false); save(); closeLayer(); navigate('dashboard'); toast(t('reset.wiped'), 'warn'); break;
+    case 'load-demo': db = seed(true); await dbReset(db); closeLayer(); navigate('dashboard'); toast(t('reset.demoLoaded')); break;
+    case 'wipe-all': db = seed(false); await dbReset(db); closeLayer(); navigate('dashboard'); toast(t('reset.wiped'), 'warn'); break;
   }
 });
 
@@ -88,23 +98,48 @@ document.addEventListener('change', e=>{
   if(e.target.dataset?.action === 'cart-set'){ cartSetQty(e.target.dataset.id, parseFloat(e.target.value)); }
 });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeLayer(); });
- $('#import-file').addEventListener('change', e=>{
+ $('#import-file').addEventListener('change', async e=>{
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try{
       const data = JSON.parse(reader.result);
       if(!data.settings || !Array.isArray(data.products) || !Array.isArray(data.movements)) throw 0;
-      db = data; save(); renderPage();
+      replaceDb(data); await dbSave(db); renderPage(); updateChrome();
       toast(t('settings.restoreToast', { n: db.products.length }));
     }catch(_){ toast(t('settings.invalidFile'), 'err'); }
   };
   reader.readAsText(file);
   e.target.value = '';
 });
+$('#import-db-file').addEventListener('change', async e=>{
+  const file = e.target.files[0]; if(!file) return;
+  try{
+    await dbImportDb(file);
+    replaceDb(dbLoad()); renderPage(); updateChrome();
+    toast(t('settings.dbRestored'));
+  }catch(_){ toast(t('settings.invalidDbFile'), 'err'); }
+  e.target.value = '';
+});
 
 /* ════════════════ 12. DÉMARRAGE ════════════════ */
-navigate('dashboard');
-if(db.settings.shopName === t('seed.demoShopName')){
-  setTimeout(()=> toast(t('welcome.toast')), 700);
-}
+(async function boot(){
+  try{
+    await initSqlite();
+    const stored = dbLoad();
+    if(stored && (stored.products.length || stored.movements.length || stored.invoices.length
+                 || (stored.settings.shopName !== '' && !load()))){
+      replaceDb(stored);
+    } else {
+      await dbSave(db);          /* première base : écriture du jeu de démo */
+    }
+  }catch(err){
+    console.error('SQLite indisponible, repli localStorage :', err);
+    saveLegacy(db);
+    setTimeout(()=> toast(t('settings.sqliteUnavailable'), 'warn'), 700);
+  }
+  navigate('dashboard');
+  if(db.settings.shopName === t('seed.demoShopName')){
+    setTimeout(()=> toast(t('welcome.toast')), 700);
+  }
+})();
