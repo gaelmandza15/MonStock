@@ -37,11 +37,15 @@ const ROOT = path.resolve(__dirname, '..');
 const STAGED = process.argv.includes('--staged');
 
 /* ── Collecte des fichiers à analyser ─────────────────────────── */
+/* Les chemins sont normalisés avec « / » (voir rel) : les comparaisons et les
+   exclusions ci-dessous sont écrites dans cette forme, identique sur tout système. */
+const rel = (p) => path.relative(ROOT, p).split(path.sep).join('/');
+
 function listFiles() {
   if (STAGED) {
     try {
       return cp.execSync('git diff --cached --name-only --diff-filter=ACM', { cwd: ROOT })
-        .toString().split('\n').filter(Boolean);
+        .toString().split('\n').filter(Boolean).map(f => f.split('\\').join('/'));
     } catch (e) { console.error('Impossible de lire le dépôt Git :', e.message); process.exit(1); }
   }
   const out = [];
@@ -49,13 +53,12 @@ function listFiles() {
     for (const name of fs.readdirSync(dir)) {
       if (name === '.git' || name === 'node_modules') continue;
       const p = path.join(dir, name);
-      fs.statSync(p).isDirectory() ? walk(p) : out.push(path.relative(ROOT, p));
+      fs.statSync(p).isDirectory() ? walk(p) : out.push(rel(p));
     }
   })(ROOT);
   return out;
 }
 
-const rel = (p) => path.relative(ROOT, p).split(path.sep).join('/');
 const files = listFiles();
 const has = (f) => files.includes(f);
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
