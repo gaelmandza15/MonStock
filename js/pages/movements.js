@@ -53,7 +53,7 @@ function movementModal(){
       <p id="mv-error" class="hidden text-xs font-semibold text-danger"></p>
       <div class="flex gap-2.5 pt-1">
         <button type="button" data-action="close-layer" class="flex-1 border border-line text-muted hover:text-ink font-semibold text-sm py-2.5 rounded-xl">Annuler</button>
-        <button type="submit" class="flex-1 bg-accent hover:bg-accent-dark text-white font-bold text-sm py-2.5 rounded-xl shadow-soft">Enregistrer</button>
+        <button type="submit" class="flex-1 bg-accent hover:bg-accent-dark text-white font-bold text-sm py-2.5 rounded-xl">Enregistrer</button>
       </div></form>`);
   const f = $('#mv-form'), hint = $('#mv-hint'), up = f.elements.unitPrice;
   const sync = ()=>{

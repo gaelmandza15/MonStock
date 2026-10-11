@@ -10,7 +10,7 @@ function animateNum(el, to, fmt){
 }
 
 function kpiCard(label, value, sub, icon, tone){
-  return `<div class="bg-white rounded-3xl shadow-soft p-5">
+  return `<div class="bg-white rounded-3xl p-5">
     <div class="flex items-center justify-between">
       <p class="text-[11px] font-bold uppercase tracking-wide text-muted">${label}</p>
       <span class="w-8 h-8 rounded-xl ${tone.bg} grid place-items-center"><i data-lucide="${icon}" class="w-4 h-4 ${tone.fg}"></i></span>
@@ -63,7 +63,7 @@ function renderChart(){
   });
   $('#chart-wrap').innerHTML = `
     <svg viewBox="0 0 ${W} ${H}" class="w-full">${bars}</svg>
-    <div id="chart-tip" class="absolute pointer-events-none opacity-0 transition-opacity bg-ink text-white text-xs font-semibold rounded-lg px-2.5 py-1.5 shadow-pop whitespace-nowrap"></div>
+    <div id="chart-tip" class="absolute pointer-events-none opacity-0 transition-opacity bg-ink text-white text-xs font-semibold rounded-lg px-2.5 py-1.5 whitespace-nowrap"></div>
     <div class="flex justify-between mt-1 px-2 text-[10px] text-muted/70">
       <span>${days[0].toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</span>
       <span>Aujourd'hui</span></div>`;

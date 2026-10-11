@@ -12,9 +12,5 @@ tailwind.config = {
       info:   { DEFAULT:'#3D5A80', soft:'#E8EEF5' },
     },
     fontFamily: { sans: ['"Plus Jakarta Sans"','ui-sans-serif','system-ui','sans-serif'] },
-    boxShadow: {
-      soft: '0 1px 2px rgba(28,42,36,.05), 0 8px 28px rgba(28,42,36,.07)',
-      pop:  '0 18px 50px rgba(28,42,36,.18)',
-    },
   }}
 }

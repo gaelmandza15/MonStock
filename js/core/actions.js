@@ -51,8 +51,8 @@ document.addEventListener('click', e=>{
     }
     case 'reset-data': openModal(`${modalHeader('Réinitialiser les données','Cette action est irréversible.')}
       <div class="px-6 pb-6 pt-3 space-y-2.5">
-        <button data-action="load-demo" class="w-full bg-accent hover:bg-accent-dark text-white font-bold text-sm py-3 rounded-xl shadow-soft">Recharger les données de démonstration</button>
-        <button data-action="wipe-all" class="w-full bg-danger hover:brightness-95 text-white font-bold text-sm py-3 rounded-xl shadow-soft">Tout effacer (boutique vide)</button>
+        <button data-action="load-demo" class="w-full bg-accent hover:bg-accent-dark text-white font-bold text-sm py-3 rounded-xl">Recharger les données de démonstration</button>
+        <button data-action="wipe-all" class="w-full bg-danger hover:brightness-95 text-white font-bold text-sm py-3 rounded-xl">Tout effacer (boutique vide)</button>
         <button data-action="close-layer" class="w-full border border-line text-muted hover:text-ink font-semibold text-sm py-2.5 rounded-xl">Annuler</button></div>`); break;
     case 'load-demo': db = seed(true); save(); closeLayer(); navigate('dashboard'); toast('Données de démonstration rechargées'); break;
     case 'wipe-all': db = seed(false); save(); closeLayer(); navigate('dashboard'); toast('Toutes les données ont été effacées', 'warn'); break;

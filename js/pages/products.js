@@ -52,7 +52,7 @@ function renderProducts(){
          <p class="font-bold mt-3">Aucun résultat</p><p class="text-sm text-muted mt-1">Essayez une autre recherche ou catégorie.</p>`
       : `<span class="w-12 h-12 rounded-2xl bg-accent-soft grid place-items-center mx-auto"><i data-lucide="package-open" class="w-6 h-6 text-accent"></i></span>
          <p class="font-bold mt-3">Votre stock est vide</p><p class="text-sm text-muted mt-1">Ajoutez votre premier produit pour démarrer.</p>
-         <button data-action="open-new-product" class="mt-4 bg-accent hover:bg-accent-dark text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-soft inline-flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>Nouveau produit</button>`;
+         <button data-action="open-new-product" class="mt-4 bg-accent hover:bg-accent-dark text-white font-semibold text-sm px-4 py-2.5 rounded-xl inline-flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>Nouveau produit</button>`;
   }
 }
 
@@ -90,7 +90,7 @@ function productForm(p){
       <p id="pf-error" class="hidden text-xs font-semibold text-danger"></p>
       <div class="flex gap-2.5 pt-2">
         <button type="button" data-action="close-layer" class="flex-1 border border-line text-muted hover:text-ink font-semibold text-sm py-2.5 rounded-xl">Annuler</button>
-        <button type="submit" class="flex-1 bg-accent hover:bg-accent-dark text-white font-bold text-sm py-2.5 rounded-xl shadow-soft">${isNew?'Ajouter le produit':'Enregistrer'}</button>
+        <button type="submit" class="flex-1 bg-accent hover:bg-accent-dark text-white font-bold text-sm py-2.5 rounded-xl">${isNew?'Ajouter le produit':'Enregistrer'}</button>
       </div>
     </form>`;
 }
@@ -135,7 +135,7 @@ function restockModal(p){
         <input name="note" type="text" class="${inputCls}" placeholder="Ex : Livraison grossiste"></div>
       <div class="flex gap-2.5 pt-1">
         <button type="button" data-action="close-layer" class="flex-1 border border-line text-muted hover:text-ink font-semibold text-sm py-2.5 rounded-xl">Annuler</button>
-        <button type="submit" class="flex-1 bg-accent hover:bg-accent-dark text-white font-bold text-sm py-2.5 rounded-xl shadow-soft">Ajouter au stock</button>
+        <button type="submit" class="flex-1 bg-accent hover:bg-accent-dark text-white font-bold text-sm py-2.5 rounded-xl">Ajouter au stock</button>
       </div></form>`);
   $('#restock-form').addEventListener('submit', e=>{
     e.preventDefault();

@@ -12,8 +12,8 @@ function renderSell(){
   $('#sell-grid').innerHTML = list.length ? list.map(p=>{
     const out = p.stock <= 0, inCart = ui.cart.find(l=>l.productId===p.id);
     return `<button data-action="sell-add" data-id="${p.id}" ${out?'disabled':''}
-      class="text-left bg-white rounded-2xl shadow-soft p-4 border ${out?'opacity-45 cursor-not-allowed border-line':'border-transparent hover:border-accent/40 hover:shadow-pop'} transition relative">
-      ${inCart?`<span class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-accent text-white text-xs font-extrabold grid place-items-center shadow-soft num">${fmtQty(inCart.qty)}</span>`:''}
+      class="text-left bg-white rounded-2xl p-4 border ${out?'opacity-45 cursor-not-allowed border-line':'border-transparent hover:border-accent/40'} transition relative">
+      ${inCart?`<span class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-accent text-white text-xs font-extrabold grid place-items-center num">${fmtQty(inCart.qty)}</span>`:''}
       <p class="font-bold text-sm leading-snug line-clamp-2">${esc(p.name)}</p>
       <p class="text-[11px] text-muted mt-0.5">${esc(p.category||'')}</p>
       <p class="num font-extrabold text-accent mt-2">${fmtMoney(p.price)}</p>
