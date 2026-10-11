@@ -105,10 +105,13 @@
         <div class="bg-white rounded-3xl p-5 lg:p-6 xl:col-span-2">
           <div class="flex items-baseline justify-between">
             <div>
-              <h2 class="font-bold">Ventes des 7 derniers jours</h2>
-              <p class="text-xs text-muted mt-0.5">Montant encaissé par jour</p>
+              <h2 class="font-bold" data-i18n="dash.chartTitle">Ventes des 7 derniers jours</h2>
+              <p class="text-xs text-muted mt-0.5" data-i18n="dash.chartSub">Montant encaissé par jour</p>
             </div>
-            <span id="chart-total" class="num text-sm font-bold text-accent"></span>
+            <div class="text-right">
+              <span id="chart-total" class="num text-base font-extrabold text-accent block"></span>
+              <span id="chart-meta" class="num text-[11px] font-semibold text-muted block mt-0.5"></span>
+            </div>
           </div>
           <div id="chart-wrap" class="relative mt-5"></div>
         </div>
