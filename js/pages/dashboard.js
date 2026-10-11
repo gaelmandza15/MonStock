@@ -44,42 +44,109 @@ function renderChart(){
     .filter(m => m.type==='out' && m.saleId && dayKey(new Date(m.date)) === dayKey(d))
     .reduce((s,m)=> s + m.qty*m.unitPrice, 0));
   const grand = totals.reduce((a,b)=>a+b,0);
-  $('#chart-total').textContent = 'Total : ' + fmtMoney(grand);
-  const max = Math.max(...totals, 1);
-  const W=560, H=210, padL=16, colW=(W-2*padL)/7, barW=Math.min(44, colW*.5);
-  const labels = days.map(d => d.toLocaleDateString(localeOf(),{weekday:'narrow'}));
-  const dateLbls = days.map(d => d.toLocaleDateString(localeOf(),{weekday:'long', day:'numeric', month:'long'}));
+  const actifs = totals.filter(v => v > 0).length;
+  const moy = grand / 7;
+  let best = 0; totals.forEach((v,i)=>{ if(v > totals[best]) best = i; });
+
+  $('#chart-total').textContent = t('dash.chartTotal', { amount: fmtMoney(grand) });
+  $('#chart-meta').textContent = grand > 0
+    ? t('dash.chartAvg', { amount: fmtMoney(moy) }) + ' · ' + t('dash.chartBest', {
+        day: days[best].toLocaleDateString(localeOf(), { weekday: 'short', day: 'numeric', month: 'short' }),
+        amount: fmtMoney(totals[best]) })
+    : '';
+
+  /* Repère haut de graphique : on arrondit le maximum à une valeur « ronde »
+     pour obtenir des graduations lisibles, et on affiche des « jolis »
+     montants au-dessus des barres plutôt que des nombres bruts. */
+  const top = (max => {
+    if(!max) return 1;
+    const exp = Math.pow(10, Math.floor(Math.log10(max)));
+    const pas = [1,2,2.5,5,10].find(k => max <= k*exp) || 10;
+    return pas*exp;
+  })(Math.max(...totals, 0));
+  const prettySteps = [top, top/2, top/4].filter(v => v > 0);
+  const pretty = v => {
+    const s = prettySteps.find(p => p <= v);
+    return s ? Math.round(v/s)*s : v;
+  };
+
+  const wrap = $('#chart-wrap');
+  const cw = Math.max(300, wrap.clientWidth || 560);
+  const W = cw, H = 264;
+  const padL = 8, padR = 6, padT = 26, padB = 44;
+  const areaH = H - padT - padB;
+  const n = 7, colW = (W - padL - padR) / n, barW = Math.min(46, colW*0.56);
+
+  const yOf = v => padT + areaH - (v / top) * areaH;
+  const tick = v => `<line x1="${padL}" y1="${yOf(v)}" x2="${W-padR}" y2="${yOf(v)}" stroke="#EDEAE1" stroke-width="1"${v===0?'':' stroke-dasharray="3 4"'}/>
+    <text x="${W-padR}" y="${yOf(v)-5}" text-anchor="end" font-size="10" font-weight="700" fill="#9AA6A0" font-family="Plus Jakarta Sans">${shortMoney(v)}</text>`;
+
   let bars = '';
   totals.forEach((v,i)=>{
-    const h = v/max * 132, x = padL + i*colW + (colW-barW)/2, y = 176 - h;
-    const isToday = i === 6;
-    bars += `<g class="chart-hit" data-idx="${i}" style="cursor:default">
-      <rect x="${x-6}" y="20" width="${barW+12}" height="164" fill="transparent"></rect>
-      <rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h, v>0?6:0)}" rx="9"
-        fill="${v>0 ? (isToday ? '#166B4A' : '#166B4A' + '3D' && '#A9CFBC') : '#EDEAE1'}"></rect>
-      ${v<=0 ? `<rect x="${x}" y="170" width="${barW}" height="6" rx="3" fill="#EDEAE1"></rect>` : ''}
-      <text x="${x+barW/2}" y="196" text-anchor="middle" font-size="11" font-weight="${isToday?800:600}"
-        fill="${isToday?'#166B4A':'#68766E'}" font-family="Plus Jakarta Sans">${labels[i]}</text></g>`;
+    const center = padL + colW*i + colW/2, x = center - barW/2;
+    const isToday = i === 6, maxed = v === totals[best] && v > 0;
+    const h = v > 0 ? Math.max((v/top)*areaH, 6) : 0;
+    const y = padT + areaH - h;
+    const fill = !v ? '#E4E0D6' : isToday ? '#166B4A' : maxed ? '#3E8E6C' : '#A9CFBC';
+    const labelFmt = v >= 1000 ? shortMoney(v) : new Intl.NumberFormat(localeOf(),{maximumFractionDigits:0}).format(Math.round(v));
+    bars += `<g class="chart-hit" data-idx="${i}" style="cursor:pointer">
+      <rect x="${padL+colW*i}" y="${padT}" width="${colW}" height="${areaH}" fill="transparent"></rect>
+      ${v > 0
+        ? `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="9" fill="${fill}"${isToday?` stroke="#0F4F37" stroke-width="1"`:''}></rect>
+           <text x="${center}" y="${y-7}" text-anchor="middle" font-size="10.5" font-weight="800"
+             fill="${isToday?'#166B4A':'#68766E'}" font-family="Plus Jakarta Sans">${labelFmt}</text>`
+        : `<text x="${center}" y="${padT+areaH-9}" text-anchor="middle" font-size="10" font-weight="700"
+             fill="#B4BDB8" font-family="Plus Jakarta Sans">0</text>
+           <circle cx="${center}" cy="${padT+areaH-3.5}" r="2" fill="#D8D3C7"></circle>`}
+      <text x="${center}" y="${H-26}" text-anchor="middle" font-size="11.5" font-weight="${isToday?800:600}"
+        fill="${isToday?'#166B4A':'#68766E'}" font-family="Plus Jakarta Sans">${days[i].toLocaleDateString(localeOf(),{weekday:'narrow'})}</text>
+      <text x="${center}" y="${H-11}" text-anchor="middle" font-size="9.5" font-weight="600"
+        fill="${isToday?'#166B4A':'#A6B0AB'}" font-family="Plus Jakarta Sans">${days[i].toLocaleDateString(localeOf(),{day:'numeric',month:'short'})}</text></g>`;
   });
-  $('#chart-wrap').innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" class="w-full">${bars}</svg>
-    <div id="chart-tip" class="absolute pointer-events-none opacity-0 transition-opacity bg-ink text-white text-xs font-semibold rounded-lg px-2.5 py-1.5 whitespace-nowrap"></div>
-    <div class="flex justify-between mt-1 px-2 text-[10px] text-muted/70">
-      <span>${days[0].toLocaleDateString(localeOf(),{day:'numeric',month:'short'})}</span>
-      <span>Aujourd'hui</span></div>`;
-  const tip = $('#chart-tip'), wrap = $('#chart-wrap');
+
+  wrap.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" class="w-full" role="img" aria-label="${esc(t('dash.chartTitle'))}">
+      ${prettySteps.map(tick).join('')}
+      <line x1="${padL}" y1="${yOf(0)}" x2="${W-padR}" y2="${yOf(0)}" stroke="#D8D3C7" stroke-width="1.25"/>
+      ${bars}
+    </svg>
+    <div id="chart-tip" class="absolute pointer-events-none opacity-0 transition-opacity bg-ink text-white text-[11px] font-semibold rounded-lg px-2.5 py-1.5 whitespace-nowrap z-10"></div>
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 mt-3 pt-3 border-t border-line text-[11px] font-semibold text-muted">
+      <span class="inline-flex items-center gap-1.5"><i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-accent"></i>${t('dash.chartTotal', { amount: fmtMoney(grand) })}</span>
+      <span data-i18n="dash.chartSub">${t('dash.chartSub')}</span>
+      <span>${actifs}/7</span>
+    </div>
+    ${grand > 0 ? '' : `<p class="text-xs text-muted text-center py-4">${t('dash.chartNone')}</p>`}`;
+
+  const tip = $('#chart-tip');
+  const dayLbl = i => days[i].toLocaleDateString(localeOf(),{weekday:'long', day:'numeric', month:'long'});
+  const showTip = i => {
+    tip.textContent = `${dayLbl(i)} — ${totals[i] > 0 ? fmtMoney(totals[i]) : t('dash.chartNoDay')}`;
+    const center = padL + colW*i + colW/2, scale = (wrap.clientWidth || W) / W;
+    const cx = center * scale;
+    tip.style.left = Math.max(4, Math.min(wrap.clientWidth - tip.offsetWidth - 4, cx - tip.offsetWidth/2)) + 'px';
+    tip.style.top = Math.max(0, (padT + areaH - (totals[i]>0 ? (totals[i]/top)*areaH : 0)) * scale - 40) + 'px';
+    tip.classList.remove('opacity-0');
+  };
+  const hideTip = () => tip.classList.add('opacity-0');
   wrap.querySelectorAll('.chart-hit').forEach(g=>{
-    g.addEventListener('mouseenter', ()=>{
-      const i = +g.dataset.idx;
-      tip.textContent = `${dateLbls[i]} — ${fmtMoney(totals[i])}`;
-      const bar = g.querySelectorAll('rect')[1] || g.querySelector('rect');
-      const wr = wrap.getBoundingClientRect(), br = bar.getBoundingClientRect();
-      tip.style.left = Math.min(wr.width - 10, br.left - wr.left + br.width/2 - tip.offsetWidth/2) + 'px';
-      tip.style.top = (br.top - wr.top - 34) + 'px';
-      tip.classList.remove('opacity-0');
-    });
-    g.addEventListener('mouseleave', ()=> tip.classList.add('opacity-0'));
+    const i = +g.dataset.idx;
+    g.addEventListener('mouseenter', ()=> showTip(i));
+    g.addEventListener('mouseleave', hideTip);
+    g.addEventListener('focus', ()=> showTip(i));
+    g.addEventListener('blur', hideTip);
+    g.addEventListener('click', ()=> showTip(i));
+    g.addEventListener('touchstart', e => { e.preventDefault(); showTip(i); }, {passive:false});
+    g.setAttribute('tabindex', '0');
   });
+}
+
+/* Formate un montant de façon compacte (12 000 → 12 k, 1 500 000 → 1,5 M) :
+   sert aux graduations de l'axe et aux étiquettes des barres. */
+function shortMoney(v){
+  if(v >= 1e6) return new Intl.NumberFormat(localeOf(),{maximumFractionDigits:1}).format(v/1e6) + ' M';
+  if(v >= 1e3) return new Intl.NumberFormat(localeOf(),{maximumFractionDigits:v%1e3===0?0:1}).format(v/1e3) + ' k';
+  return new Intl.NumberFormat(localeOf(),{maximumFractionDigits:0}).format(v);
 }
 
 function renderAlerts(){
