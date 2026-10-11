@@ -1,6 +1,26 @@
 {
+  "name": "klarstock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KlarStock — gestion de stock 100 % hors ligne (web + bureau Tauri)",
+  "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "build": "node scripts/build-tailwind.js && node scripts/build-icons.js",
+    "test": "node scripts/test-sqlite.js",
+    "i18n-check": "node scripts/i18n-check.js",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
   "dependencies": {
+    "@tauri-apps/api": "^2.1.1",
+    "@tauri-apps/plugin-dialog": "^2.2.0",
     "fake-indexeddb": "^6.2.5",
     "sql.js": "^1.14.2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.2",
+    "lucide": "^0.462.0",
+    "tailwindcss": "^3.4.17"
   }
 }

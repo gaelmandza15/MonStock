@@ -49,10 +49,19 @@ document.addEventListener('click', async e=>{
     case 'export-db': {
       if(!sqliteDb){ toast(t('settings.sqliteUnavailable'), 'warn'); break; }
       const bytes = await dbExportDb();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([bytes], {type:'application/vnd.sqlite3'}));
-      a.download = 'klarstock.db'; a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+      if(IS_TAURI){
+        /* Sous Tauri : on écrit directement dans un fichier choisi par l'utilisateur. */
+        const { save } = await import('@tauri-apps/plugin-dialog');
+        const path = await save({ defaultPath: 'klarstock.db',
+          filters: [{ name: 'SQLite', extensions: ['db'] }] });
+        if(!path) break;
+        await window.__TAURI__.core.invoke('write_file_bytes', { path, bytes: Array.from(bytes) });
+      } else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([bytes], {type:'application/vnd.sqlite3'}));
+        a.download = 'klarstock.db'; a.click();
+        setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+      }
       toast(t('settings.dbDownloaded')); break;
     }
     case 'import-db': $('#import-db-file').click(); break;
@@ -125,8 +134,9 @@ $('#import-db-file').addEventListener('change', async e=>{
 /* ════════════════ 12. DÉMARRAGE ════════════════ */
 (async function boot(){
   try{
+    if(IS_TAURI) await cfgInit();   /* config lue depuis le disque avant tout usage */
     await initSqlite();
-    const stored = dbLoad();
+    const stored = await dbLoad();
     if(stored && (stored.products.length || stored.movements.length || stored.invoices.length
                  || (stored.settings.shopName !== '' && !load()))){
       replaceDb(stored);

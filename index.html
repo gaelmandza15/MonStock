@@ -4,12 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KlarStock — Gestion de stock</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
-<script src="js/config/tailwind.config.js"></script>
+<!-- Ressources 100 % locales (vendor/) — aucun CDN, aucune police externe -->
+<link rel="preload" href="vendor/fonts/pjs-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="vendor/fonts.css">
+<link rel="stylesheet" href="vendor/tailwind.css"><!-- build Tailwind v3.4.17 (voir scripts/build-tailwind.js) -->
+<script src="vendor/lucide-local.js"></script><!-- shim "lucide" sans réseau (scripts/build-icons.js) -->
+<script>/* Tauri : pas de WASM/IndexedDB, SQLite est côté Rust (src-tauri).
+   Le wasm de sql.js et le preload ne sont injectés qu'en mode navigateur. */
+window.__KLAR_TAURI__ = !!(window.__TAURI__ || window.__TAURI_INTERNALS__);
+if(!window.__KLAR_TAURI__){
+  document.write('<link rel="preload" href="vendor/sqljs/sql-wasm.wasm" as="fetch" type="application/wasm">'
+    + '<script src="vendor/sqljs/sql-wasm.js"><\/script>'); /* sql.js 1.10.3, licence MIT */
+}</script>
 <script src="js/config/currencies.js"></script>
 <link rel="stylesheet" href="css/style.css">
 <style>/* Impression ticket de caisse (format commerce 80mm) */
@@ -405,7 +411,10 @@
 <script src="js/i18n/fr.js"></script>
 <script src="js/i18n/en.js"></script>
 <script src="js/core/i18n.js"></script>
-<script src="js/core/sqlite.js"></script>
+<script src="js/core/storage.js"></script><!-- pont Web/Tauri : cfg + détection -->
+<script>/* Moteur SQLite : WASM (navigateur) ou rusqlite (Tauri). Un seul des deux. */
+if(window.__KLAR_TAURI__){ document.write('<script src="js/core/sqlite-tauri.js"><\/script>'); }
+else { document.write('<script src="js/core/sqlite.js"><\/script>'); }</script>
 <script src="js/core/state.js"></script>
 <script src="js/core/utils.js"></script>
 <script src="js/core/ui.js"></script>

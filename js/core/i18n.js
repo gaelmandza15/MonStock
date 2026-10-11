@@ -11,7 +11,7 @@ const DEFAULT_LANG = 'fr';
 
 function loadLang(){
   try{
-    const l = localStorage.getItem(LS_LANG);
+    const l = cfgGet(LS_LANG);
     if(l && LANGS[l]) return l;
   }catch(_){ /* stockage indisponible */ }
   return DEFAULT_LANG;

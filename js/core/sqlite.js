@@ -87,11 +87,11 @@ async function idbPut(key, val){
 /* ---------- ouverture / initialisation ---------- */
 async function initSqlite(){
   if(!window.initSqlJs) throw new Error('sql.js indisponible');
-  if(!SQL) SQL = await window.initSqlJs({ locateFile: f => CDN_SQLJS + f });
+  if(!SQL) SQL = await window.initSqlJs({ locateFile: f => VENDOR_SQLJS + f });
   let bytes = await idbGet('klarstock.db');
   let migratedNow = false;
-  if(!bytes && !localStorage.getItem(LS_MIGRATED)){
-    const raw = localStorage.getItem(LS);
+  if(!bytes && !cfgGet(LS_MIGRATED)){
+    const raw = cfgGet(LS);
     if(raw){
       try{
         const jdb = JSON.parse(raw);
@@ -108,7 +108,7 @@ async function initSqlite(){
   sqliteDb = bytes ? new SQL.Database(bytes) : new SQL.Database();
   createSchema();
   /* le drapeau n'est posé qu'après ouverture réussie (sinon la migration sera retentée) */
-  if(migratedNow) localStorage.setItem(LS_MIGRATED, '1');
+  if(migratedNow) cfgSet(LS_MIGRATED, '1');
   if(getMeta('schema_version') === null){
     setMeta('schema_version', APP_SCHEMA);
     setMeta('created_at', new Date().toISOString());
@@ -221,7 +221,7 @@ async function dbStorageInfo(){
   return { usage: e.usage || 0, quota: e.quota || 0 };
 }
 
-/* repli si SQLite n'a pas pu démarrer (CDN hors ligne, vieux navigateur…) */
+/* repli si SQLite n'a pas pu démarrer (wasm indisponible, vieux navigateur…) */
 function saveLegacy(data){
   try{ localStorage.setItem(LS, JSON.stringify(data)); }catch(_){}
 }

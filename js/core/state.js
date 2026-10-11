@@ -5,7 +5,8 @@
    dans IndexedDB). localStorage ne sert plus que de repli et pour la langue. */
 const LS = 'klarstock_v1';
 const LS_LANG = 'klarstock_lang';
-const CDN_SQLJS = 'https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/';
+/* sql.js est vendorisé dans vendor/sqljs/ (aucun CDN, aucun réseau) */
+const VENDOR_SQLJS = 'vendor/sqljs/';
 /* Les libellés passent par des clés i18n : aucune chaîne affichable en dur ici.
    La liste complète des devises (groupées par continent) est dans js/config/currencies.js. */
 const UNIT_KEYS = ['units.piece','units.pack','units.carton','units.bag','units.jerrycan',
@@ -23,8 +24,8 @@ const prevKpi = {};
 
 /* Chargement initial : localStorage (repli / avant migration SQLite). */
 function save(){ dbSave(db); }
-function saveLang(){ localStorage.setItem(LS_LANG, lang); }
-function load(){ try{ const r = localStorage.getItem(LS); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function saveLang(){ cfgSet(LS_LANG, lang); }
+function load(){ try{ const r = cfgGet(LS); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 /* Remplacement de la base en mémoire par un objet importé/restauré. */
