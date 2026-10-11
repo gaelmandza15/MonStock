@@ -458,6 +458,9 @@ const I18N_FR = {
   'invoices.needLine': 'La facture doit contenir au moins une ligne.',
   'invoices.removeLine': 'Retirer cette ligne',
 
+  'invoices.itemsCount': '{n} article|{n} articles',
+  'invoices.receiptFoot': 'Conservez ce ticket pour toute réclamation.',
+
   /* ── PDV : champ client + toast facture ── */
   'sell.receivedLabel': 'Montant reçu du client',
   'sell.customerLabel': 'Client (facultatif)',

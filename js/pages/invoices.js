@@ -93,42 +93,41 @@ function renderInvoices(){
   icons();
 }
 
-/* ── Document imprimable ──────────────────────────── */
+/* ── Document imprimable : ticket de caisse (format commerce 80 mm) ── */
 function invoiceDocHtml(i){
   const shop = esc(db.settings.shopName);
-  const sub = [db.settings.shopAddress, db.settings.shopPhone, db.settings.shopEmail]
-    .filter(Boolean).map(esc).join(' · ');
+  const head = [db.settings.shopAddress, db.settings.shopPhone, db.settings.shopEmail]
+    .filter(Boolean).map(esc).join('<br>');
   const taxPct = db.settings.taxRate || 0;
-  const subtotal = invTotal(i), tax = subtotal * taxPct / 100;
-  const rows = i.lines.map(l => `<tr>
-      <td>${esc(l.name)}</td>
-      <td class="pr-right">${fmtQty(l.qty)}${l.unit ? ' ' + esc(l.unit) : ''}</td>
-      <td class="pr-right">${fmtMoney(l.price)}</td>
-      <td class="pr-right">${fmtMoney(l.qty * l.price)}</td></tr>`).join('');
-  return `<div style="max-width:680px;margin:auto;font-family:sans-serif">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
-      <div><h1 style="font-size:20px;margin:0">${shop}</h1>
-        <p style="margin:4px 0 0;font-size:12px;color:#555">${sub}</p></div>
-      <div style="text-align:right">
-        <h2 style="font-size:16px;margin:0;text-transform:uppercase">${t('invoices.docTitle')}</h2>
-        <p style="margin:4px 0 0;font-size:13px" class="num">${esc(i.number)}</p>
-        <p style="margin:2px 0 0;font-size:12px;color:#555">${fmtDate(i.date)}</p></div>
+  const subtotal = invTotal(i), tax = subtotal * taxPct / 100, total = subtotal + tax;
+  const dt = new Date(i.date);
+  const dStr = dt.toLocaleDateString(localeOf());
+  const hStr = dt.toLocaleTimeString(localeOf(), { hour:'2-digit', minute:'2-digit' });
+  const items = i.lines.reduce((s,l) => s + l.qty, 0);
+
+  const rows = i.lines.map(l => `
+    <div class="rc-item"><span class="rc-item-name">${esc(l.name)}</span><span>${fmtMoney(l.qty * l.price)}</span></div>
+    <div class="rc-item rc-sub"><span class="rc-item-name">&#166; ${fmtQty(l.qty)}${l.unit ? ' ' + esc(l.unit) : ''} × ${fmtMoney(l.price)}</span><span>&nbsp;</span></div>`).join('');
+
+  return `<div class="receipt">
+    <div class="rc-center">
+      <div class="rc-shop">${shop}</div>
+      ${head ? `<div class="rc-sub">${head}</div>` : ''}
     </div>
-    <p style="font-size:13px;margin:0 0 16px"><strong>${t('invoices.colCustomer')} :</strong> ${esc(i.customer)}</p>
-    <table>
-      <thead><tr><th>${t('invoices.lineProduct')}</th><th class="pr-right">${t('invoices.lineQty')}</th>
-        <th class="pr-right">${t('invoices.linePrice')}</th><th class="pr-right">${t('invoices.lineTotal')}</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div style="display:flex;justify-content:flex-end;margin-top:16px">
-      <div style="width:260px;font-size:13px">
-        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>${t('invoices.subtotal')}</span><span class="num">${fmtMoney(subtotal)}</span></div>
-        ${taxPct ? `<div style="display:flex;justify-content:space-between;padding:4px 0"><span>${t('invoices.taxLine', { pct: taxPct })}</span><span class="num">${fmtMoney(tax)}</span></div>` : ''}
-        <div style="display:flex;justify-content:space-between;padding:6px 0;font-weight:800;border-top:2px solid #111">
-          <span>${t('invoices.totalLabel')}</span><span class="num">${fmtMoney(subtotal + tax)}</span></div>
-      </div>
-    </div>
-    <p style="margin-top:28px;font-size:12px;color:#555;text-align:center">${t('invoices.thanks')}</p>
+    <div class="rc-hr"></div>
+    <div class="rc-row"><span>${t('invoices.docTitle')} <b class="num">${esc(i.number)}</b></span><span class="num">${dStr} ${hStr}</span></div>
+    <div class="rc-row"><span>${t('invoices.colCustomer')}</span><span>${esc(i.customer)}</span></div>
+    <div class="rc-hr"></div>
+    ${rows}
+    <div class="rc-solid"></div>
+    <div class="rc-row"><span>${t('invoices.itemsCount', { n: items })}</span><span></span></div>
+    <div class="rc-row"><span>${t('invoices.subtotal')}</span><span class="num">${fmtMoney(subtotal)}</span></div>
+    ${taxPct ? `<div class="rc-row"><span>${t('invoices.taxLine', { pct: taxPct })}</span><span class="num">${fmtMoney(tax)}</span></div>` : ''}
+    <div class="rc-row rc-total"><span>${t('invoices.totalLabel')}</span><span class="num">${fmtMoney(total)}</span></div>
+    <div class="rc-hr"></div>
+    ${i.note ? `<div>${t('invoices.noteLabel')} : ${esc(i.note)}</div><div class="rc-hr"></div>` : ''}
+    <div class="rc-center rc-thanks">${t('invoices.thanks')}</div>
+    <div class="rc-center rc-foot">${t('invoices.receiptFoot')}</div>
   </div>`;
 }
 

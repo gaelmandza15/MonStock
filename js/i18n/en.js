@@ -445,6 +445,8 @@ const I18N_EN = {
   'invoices.pickFirst': 'Pick a product to add first.',
   'invoices.needLine': 'The invoice needs at least one line.',
   'invoices.removeLine': 'Remove this line',
+  'invoices.itemsCount': '{n} item|{n} items',
+  'invoices.receiptFoot': 'Keep this receipt for any inquiry.',
 
   /* ── Register: customer field + invoice toast ── */
   'sell.receivedLabel': 'Amount received from customer',

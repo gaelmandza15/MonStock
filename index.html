@@ -11,7 +11,29 @@
 <script src="js/config/tailwind.config.js"></script>
 <script src="js/config/currencies.js"></script>
 <link rel="stylesheet" href="css/style.css">
-<style>@media print{body *{visibility:hidden}#print-root,#print-root *{visibility:visible}#print-root{display:block !important;position:absolute;left:0;top:0;width:100%;background:#fff;color:#111;padding:24px;font-size:13px}#print-root table{width:100%;border-collapse:collapse}#print-root th,#print-root td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}#print-root .pr-right{text-align:right}}</style>
+<style>/* Impression ticket de caisse (format commerce 80mm) */
+@media print{
+  @page{size:80mm auto;margin:0}
+  html,body{margin:0;padding:0;background:#fff}
+  body *{visibility:hidden}
+  #print-root,#print-root *{visibility:visible}
+  #print-root{display:block !important;position:absolute;left:0;top:0;width:80mm;background:#fff;color:#000;
+    font-family:'Courier New',ui-monospace,monospace;font-size:11.5px;line-height:1.45;padding:6mm 4mm 10mm}
+  #print-root .rc-center{text-align:center}
+  #print-root .rc-shop{font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.5px}
+  #print-root .rc-sub{color:#333;font-size:10.5px}
+  #print-root .rc-hr{border-top:1px dashed #000;margin:6px 0}
+  #print-root .rc-solid{border-top:1px solid #000;margin:6px 0}
+  #print-root .rc-row{display:flex;justify-content:space-between;gap:6px}
+  #print-root .rc-name{font-weight:700}
+  #print-root .rc-item{display:flex;justify-content:space-between;gap:6px}
+  #print-root .rc-item-name{flex:1 1 auto}
+  #print-root .rc-item-qty{flex:0 0 auto;color:#333}
+  #print-root .rc-total{font-weight:700;font-size:13px}
+  #print-root .rc-thanks{margin-top:8px;font-weight:700}
+  #print-root .rc-foot{margin-top:4px;font-size:9.5px;color:#444}
+  #print-root .num{font-variant-numeric:normal}
+}</style>
 </head>
 <body class="bg-paper text-ink font-sans min-h-screen">
 
