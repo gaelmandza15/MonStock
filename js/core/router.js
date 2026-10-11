@@ -1,5 +1,5 @@
 /* ════════════════ 5. RENDU GLOBAL ════════════════ */
-const PAGES = ['dashboard','products','sell','movements','settings'];
+const PAGES = ['dashboard','products','sell','invoices','movements','settings'];
 
 function navigate(p){
   page = p; ui.confirmDel = null;
@@ -29,7 +29,7 @@ function updateChrome(){
 
 function renderPage(){
   updateChrome();
-  const map = { dashboard:renderDashboard, products:renderProducts, sell:renderSell, movements:renderMovements, settings:renderSettings };
+  const map = { dashboard:renderDashboard, products:renderProducts, sell:renderSell, invoices:renderInvoices, movements:renderMovements, settings:renderSettings };
   map[page]();
   icons();
 }

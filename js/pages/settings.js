@@ -2,6 +2,11 @@
 function renderSettings(){
   $('#set-shop').value = db.settings.shopName;
   $('#set-threshold').value = db.settings.defaultThreshold;
+  const addr = $('#set-address'), phone = $('#set-phone'), email = $('#set-email'), tax = $('#set-tax');
+  if(addr) addr.value = db.settings.shopAddress || '';
+  if(phone) phone.value = db.settings.shopPhone || '';
+  if(email) email.value = db.settings.shopEmail || '';
+  if(tax) tax.value = db.settings.taxRate || 0;
   $('#set-decimals').value = db.settings.decimals;
   const known = CURRENCIES.some(c=>c.c===db.settings.currency);
   let html = `<option value="" disabled${known?'':' selected'}>${t('settings.selectCurrency')}</option>`;
@@ -19,6 +24,11 @@ function saveSettings(){
   const opt = sel.selectedOptions[0];
   db.settings.decimals = parseInt($('#set-decimals').value) || 0;
   db.settings.defaultThreshold = Math.max(0, parseInt($('#set-threshold').value) || 0);
+  const addr = $('#set-address'), phone = $('#set-phone'), email = $('#set-email'), tax = $('#set-tax');
+  db.settings.shopAddress = addr ? addr.value.trim() : '';
+  db.settings.shopPhone   = phone ? phone.value.trim() : '';
+  db.settings.shopEmail   = email ? email.value.trim() : '';
+  db.settings.taxRate     = tax ? Math.max(0, Math.min(100, parseFloat(tax.value) || 0)) : 0;
   save(); updateChrome(); toast(t('settings.saved'));
 }
 

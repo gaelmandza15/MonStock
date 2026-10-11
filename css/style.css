@@ -15,3 +15,14 @@
   .anim-toast{animation:toastIn .28s ease both}
   input:focus,select:focus,textarea:focus,button:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,107,74,.18);border-color:#166B4A}
   button{transition:all .16s ease}
+
+/* ════════ Impression : factures ════════ */
+#print-root { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  #print-root, #print-root * { visibility: visible; }
+  #print-root { display: block !important; position: absolute; inset: 0; background: #fff; color: #111; padding: 24px; font-size: 13px; }
+  #print-root table { width: 100%; border-collapse: collapse; }
+  #print-root th, #print-root td { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+  #print-root .pr-right { text-align: right; }
+}

@@ -105,16 +105,22 @@ function checkout(){
   const received = ui.cash === '' ? total : (parseFloat(ui.cash) || 0);
   if(received < total) return toast(t('sell.amountInsufficient'), 'warn');
   const saleId = uid(), now = new Date().toISOString();
+  const customer = (ui.customer || '').trim();
   ui.cart.forEach(l=>{
     const p = prod(l.productId);
     p.stock -= l.qty;
     db.movements.unshift({ id:uid(), type:'out', productId:p.id, qty:l.qty, unitPrice:p.price, date:now, saleId, note:t('seed.saleNote') });
   });
+  /* Facture générée automatiquement pour chaque vente */
+  const invLines = ui.cart.map(l=>{ const p = prod(l.productId); return { productId:p.id, name:p.name, unit:p.unit||'', qty:l.qty, price:p.price }; });
+  db.invoices.push({ id:uid(), number:nextInvNumber(), saleId, date:now,
+                     customer:customer || t('invoices.walkIn'), status:'paid', lines:invLines });
   const change = received - total;
-  ui.cart = []; ui.cash = ''; $('#cash-input').value = '';
+  ui.cart = []; ui.cash = ''; ui.customer = '';
+  $('#cash-input').value = ''; $('#sell-customer').value = '';
   save(); renderPage();
   toast(change > 0.0001
     ? t('sell.validatedChange', { amount: fmtMoney(change) })
-    : t('sell.validated'));
+    : t('sell.validatedInvoice', { number: db.invoices[db.invoices.length-1].number }));
 }
 

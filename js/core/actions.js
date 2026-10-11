@@ -28,11 +28,19 @@ document.addEventListener('click', e=>{
     case 'cart-inc': { const l = ui.cart.find(x=>x.productId===id); if(l) cartSetQty(id, l.qty+1); break; }
     case 'cart-dec': { const l = ui.cart.find(x=>x.productId===id); if(l) cartSetQty(id, l.qty-1); break; }
     case 'cart-rm': cartSetQty(id, 0); break;
-    case 'clear-cart': ui.cart = []; ui.cash=''; $('#cash-input').value=''; renderSell(); icons(); break;
+    case 'clear-cart': ui.cart = []; ui.cash=''; ui.customer=''; $('#cash-input').value=''; $('#sell-customer').value=''; renderSell(); icons(); break;
     case 'quick-cash': $('#cash-input').value = el.dataset.v; renderChange(); break;
     case 'checkout': checkout(); break;
 
     case 'new-movement': movementModal(); break;
+
+    case 'new-invoice': openNewInvoice(); break;
+    case 'invoice-view': invoiceViewModal(id); break;
+    case 'invoice-print': printInvoice(id); break;
+    case 'invoice-export-txt': { const iv = db.invoices.find(x=>x.id===id); if(iv) exportInvoiceTxt(iv); break; }
+    case 'invoice-edit': openEditInvoice(id); break;
+    case 'invoice-del': deleteInvoice(id); break;
+    case 'export-invoices-csv': exportInvoicesCsv(); break;
     case 'mv-type': ui.mvType = el.dataset.v; renderMovements(); icons(); break;
 
     case 'save-settings': saveSettings(); break;
@@ -64,6 +72,8 @@ document.addEventListener('submit', e=>{
 document.addEventListener('input', e=>{
   if(e.target.id === 'prod-search'){ ui.prodSearch = e.target.value; renderProducts(); icons(); }
   if(e.target.id === 'sell-search'){ ui.sellSearch = e.target.value; renderSell(); icons(); }
+  if(e.target.id === 'sell-customer'){ ui.customer = e.target.value; }
+  if(e.target.id === 'inv-search'){ ui.invSearch = e.target.value; renderInvoices(); icons(); }
   if(e.target.id === 'cash-input'){ renderChange(); }
   if(e.target.dataset?.action === 'cart-set'){ /* géré au change */ }
 });
@@ -72,6 +82,7 @@ document.addEventListener('change', e=>{
   if(e.target.id === 'sell-cat-select'){ ui.sellCat = e.target.value; renderSell(); icons(); }
   if(e.target.id === 'prod-sort'){ ui.prodSort = e.target.value; renderProducts(); icons(); }
   if(e.target.id === 'mv-range'){ ui.mvRange = parseInt(e.target.value); renderMovements(); icons(); }
+  if(e.target.id === 'inv-status'){ ui.invStatus = e.target.value; renderInvoices(); icons(); }
   if(e.target.id === 'set-lang-sidebar' || e.target.id === 'set-lang-mobile'){ setLang(e.target.value); }
   if(e.target.id === 'set-currency'){ const d = e.target.selectedOptions[0].dataset.d; if(d!==undefined) $('#set-decimals').value = d; }
   if(e.target.dataset?.action === 'cart-set'){ cartSetQty(e.target.dataset.id, parseFloat(e.target.value)); }

@@ -9,9 +9,12 @@ const UNIT_KEYS = ['units.piece','units.pack','units.carton','units.bag','units.
                    'units.box','units.kg','units.liter','units.meter','units.bar','units.ten'];
 
 let db = load() || seed(true);
+if(!Array.isArray(db.invoices)) db.invoices = [];   /* migration anciennes sauvegardes */
+if(db.settings.taxRate == null) db.settings.taxRate = 0;
 let page = 'dashboard';
 const ui = { prodSearch:'', prodCat:'', prodSort:'name', mvType:'all', mvRange:30,
-             sellSearch:'', sellCat:'', cart:[], cash:'', confirmDel:null };
+             sellSearch:'', sellCat:'', cart:[], cash:'', customer:'', confirmDel:null,
+             invSearch:'', invStatus:'all' };
 const prevKpi = {};
 
 function save(){ localStorage.setItem(LS, JSON.stringify(db)); }
@@ -20,7 +23,9 @@ function load(){ try{ const r = localStorage.getItem(LS); return r ? JSON.parse(
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 function seed(demo){
-  const s = { settings:{ shopName:t('seed.shopName'), currency:'FCFA', decimals:0, defaultThreshold:5 }, products:[], movements:[] };
+  const s = { settings:{ shopName:t('seed.shopName'), currency:'FCFA', decimals:0, defaultThreshold:5,
+                        taxRate:0, shopAddress:'', shopPhone:'', shopEmail:'' },
+              products:[], movements:[], invoices:[] };
   if(!demo) return s;
   s.settings.shopName = t('seed.demoShopName');
   const P = (name,category,unit,cost,price,stock,threshold)=>{ const p={id:uid(),name,category,unit,cost,price,stock,threshold,sku:''}; s.products.push(p); return p; };
@@ -59,6 +64,18 @@ function seed(demo){
   const t3 = new Date(now - 4*864e5); t3.setHours(10,40,0,0);
   s.movements.push({ id:uid(), type:'in', productId:huile.id, qty:6, unitPrice:huile.cost, date:t3.toISOString(), note:t('seed.deliveryNote') });
   s.movements.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  /* Factures générées à partir des ventes de démonstration */
+  const bySale = {};
+  s.movements.forEach(m => { if(m.type==='out' && m.saleId) (bySale[m.saleId]=bySale[m.saleId]||[]).push(m); });
+  const customers = [t('seed.cust.walkin'), t('seed.cust.a'), t('seed.cust.b'), t('seed.cust.c')];
+  const statuses = ['paid','paid','sent'];
+  Object.keys(bySale).sort((a,b)=> new Date(bySale[a][0].date) - new Date(bySale[b][0].date))
+    .forEach((sid,idx)=>{
+      const mv = bySale[sid];
+      s.invoices.push({ id:uid(), number:'F-'+new Date(mv[0].date).getFullYear()+'-'+String(idx+1).padStart(4,'0'),
+        saleId:sid, date:mv[0].date, customer:customers[idx % customers.length], status:statuses[idx % statuses.length],
+        lines: mv.map(m=>{ const p2=s.products.find(x=>x.id===m.productId); return { productId:m.productId, name:p2?p2.name:'', unit:p2?p2.unit:'', qty:m.qty, price:m.unitPrice }; }) });
+    });
   return s;
 }
 
