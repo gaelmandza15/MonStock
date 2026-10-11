@@ -1,10 +1,10 @@
 /* ════════════════ 8. POINT DE VENTE ════════════════ */
 function renderSell(){
   const cats = [...new Set(db.products.map(p=>p.category).filter(Boolean))].sort();
-  $('#sell-cats').innerHTML = ['Toutes', ...cats].map(c=>{
-    const on = (c==='Toutes' && !ui.sellCat) || ui.sellCat===c;
-    return `<button data-action="sell-cat" data-cat="${esc(c)}" class="text-xs font-bold px-3.5 py-1.5 rounded-full border ${on?'bg-accent text-white border-accent':'bg-white border-line text-muted hover:text-ink'}">${esc(c)}</button>`;
-  }).join('');
+  const sel = $('#sell-cat-select');
+  sel.innerHTML = `<option value="">Toutes les catégories</option>` +
+    cats.map(c=>`<option value="${esc(c)}"${ui.sellCat===c?' selected':''}>${esc(c)}</option>`).join('');
+  sel.value = ui.sellCat || '';
   const q = ui.sellSearch.toLowerCase();
   const list = db.products.filter(p =>
     (!ui.sellCat || p.category===ui.sellCat) &&

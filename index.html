@@ -159,8 +159,15 @@
               <input id="sell-search" type="text" placeholder="Rechercher un produit…"
                 class="w-full bg-white border border-line rounded-xl pl-10 pr-4 py-2.5 text-sm placeholder:text-muted/70">
             </div>
+            <div class="relative sm:w-52 shrink-0">
+              <i data-lucide="tags" class="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <select id="sell-cat-select" aria-label="Filtrer par catégorie"
+                class="w-full appearance-none bg-white border border-line rounded-xl pl-10 pr-9 py-2.5 text-sm font-semibold shadow-none cursor-pointer">
+                <option value="">Toutes les catégories</option>
+              </select>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            </div>
           </div>
-          <div id="sell-cats" class="flex flex-wrap gap-2 mt-3"></div>
           <div id="sell-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 mt-4"></div>
         </div>
         <!-- Panier -->

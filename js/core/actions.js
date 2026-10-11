@@ -24,7 +24,6 @@ document.addEventListener('click', e=>{
     case 'quick-restock': restockModal(prod(id)); break;
     case 'sell-one': navigate('sell'); setTimeout(()=>sellAdd(id), 60); break;
 
-    case 'sell-cat': ui.sellCat = el.dataset.cat==='Toutes' ? '' : el.dataset.cat; renderSell(); icons(); break;
     case 'sell-add': sellAdd(id); break;
     case 'cart-inc': { const l = ui.cart.find(x=>x.productId===id); if(l) cartSetQty(id, l.qty+1); break; }
     case 'cart-dec': { const l = ui.cart.find(x=>x.productId===id); if(l) cartSetQty(id, l.qty-1); break; }
@@ -70,6 +69,7 @@ document.addEventListener('input', e=>{
 });
 document.addEventListener('change', e=>{
   if(e.target.id === 'prod-cat'){ ui.prodCat = e.target.value; renderProducts(); icons(); }
+  if(e.target.id === 'sell-cat-select'){ ui.sellCat = e.target.value; renderSell(); icons(); }
   if(e.target.id === 'prod-sort'){ ui.prodSort = e.target.value; renderProducts(); icons(); }
   if(e.target.id === 'mv-range'){ ui.mvRange = parseInt(e.target.value); renderMovements(); icons(); }
   if(e.target.id === 'set-currency'){ const d = e.target.selectedOptions[0].dataset.d; if(d!==undefined) $('#set-decimals').value = d; }
