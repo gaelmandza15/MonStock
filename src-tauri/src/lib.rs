@@ -224,42 +224,9 @@ fn snapshot_name() -> String {
     )
 }
 
-/* Renomme la sauvegarde la plus récente pour qu'elle reflète l'instant présent.
-   Utilisé quand la fenêtre de regroupement est écoulée et que l'on préfère
-   remplacer plutôt qu'accumuler : voir snapshot_create. */
-fn newest_snapshot(dir: &PathBuf) -> Option<PathBuf> {
-    let mut files: Vec<PathBuf> = fs::read_dir(dir)
-        .ok()?
-        .filter_map(|e| e.ok().map(|e| e.path()))
-        .filter(|p| p.extension().map(|x| x == "db").unwrap_or(false))
-        .collect();
-    files.sort();
-    files.pop()
-}
-
 #[tauri::command]
-fn snapshot_create(app: AppHandle, window_secs: Option<u64>) -> Result<Option<String>, String> {
+fn snapshot_create(app: AppHandle) -> Result<Option<String>, String> {
     let dir = backups_dir(&app)?;
-    let fenetre = window_secs.unwrap_or(0);
-
-    /* Regroupement : si la dernière sauvegarde date de moins de `fenetre`
-       secondes, on la remplace (nouveau nom, contenu à jour) au lieu d'en
-       ajouter une. Une rafale de modifications ne laisse donc qu'une copie. */
-    if fenetre > 0 {
-        if let Some(derniere) = newest_snapshot(&dir) {
-            if let Ok(meta) = derniere.metadata() {
-                if let Ok(modifie) = meta.modified() {
-                    let age = std::time::SystemTime::now()
-                        .duration_since(modifie)
-                        .map(|d| d.as_secs())
-                        .unwrap_or(u64::MAX);
-                    if age < fenetre {
-                        let _ = fs::remove_file(&derniere);
-                    }
-                }
-            }
-        }
-    }
 
     let conn = app.state::<DbState>();
     let conn = conn.conn.lock().map_err(|_| "mutex poisoned".to_string())?;

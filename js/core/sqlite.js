@@ -131,14 +131,26 @@ function writeFullDb(data){
   const insP = sqliteDb.prepare('INSERT INTO products(id,name,category,unit,sku,cost,price,stock,threshold) VALUES(?,?,?,?,?,?,?,?,?);');
   (data.products || []).forEach(p=>{ insP.run(bindParams([p.id, p.name, p.category, p.unit, p.sku || '', p.cost, p.price, p.stock, p.threshold ?? null])); });
   insP.free();
+  /* Les références à un produit absent sont écartées plutôt que de faire
+     échouer l'écriture : un mouvement orphelin ne doit pas empêcher
+     l'enregistrement et la sauvegarde de tout le reste. */
+  const connus = new Set((data.products || []).map(p => p.id));
   const insM = sqliteDb.prepare('INSERT INTO movements(id,type,product_id,qty,unit_price,date,sale_id,note) VALUES(?,?,?,?,?,?,?,?);');
-  (data.movements || []).forEach(m=>{ insM.run(bindParams([m.id, m.type, m.productId, m.qty, m.unitPrice, m.date, m.saleId || null, m.note || ''])); });
+  (data.movements || []).forEach(m=>{
+    if(!connus.has(m.productId)) return;
+    insM.run(bindParams([m.id, m.type, m.productId, m.qty, m.unitPrice, m.date, m.saleId || null, m.note || '']));
+  });
   insM.free();
   const insI = sqliteDb.prepare('INSERT INTO invoices(id,number,date,customer,status,sale_id,note) VALUES(?,?,?,?,?,?,?);');
   const insL = sqliteDb.prepare('INSERT INTO invoice_lines(invoice_id,product_id,name,unit,qty,price) VALUES(?,?,?,?,?,?);');
   (data.invoices || []).forEach(inv=>{
     insI.run(bindParams([inv.id, inv.number, inv.date, inv.customer || '', inv.status || 'sent', inv.saleId || null, inv.note || '']));
-    (inv.lines || []).forEach(l=>{ insL.run(bindParams([inv.id, l.productId || null, l.name || '', l.unit || '', l.qty, l.price])); });
+    (inv.lines || []).forEach(l=>{
+      /* La ligne garde son libellé même si le produit a été supprimé : seul le
+         lien vers le produit est rompu, l'historique de la facture reste lisible. */
+      const pid = (l.productId && connus.has(l.productId)) ? l.productId : null;
+      insL.run(bindParams([inv.id, pid, l.name || '', l.unit || '', l.qty, l.price]));
+    });
   });
   insI.free(); insL.free();
 }
@@ -241,18 +253,6 @@ function snapshotStamp(){
 async function snapshotCreate(){
   try{
     if(!sqliteDb) return null;
-    /* Regroupement : si la dernière sauvegarde date de moins de
-       backupWindow() secondes, on la remplace au lieu d'en ajouter une. */
-    const fenetre = typeof backupWindow === 'function' ? backupWindow() : 0;
-    if(fenetre > 0){
-      const latest = await snapshotLatestKey();
-      if(latest){
-        const t = snapshotTime(latest.slice('snap:'.length));
-        if(t && (Date.now() - t.getTime()) < fenetre * 1000){
-          await snapshotDelete(latest.slice('snap:'.length));
-        }
-      }
-    }
     const name = snapshotStamp() + '.db';
     await idbPut('snap:' + name, sqliteDb.export());
     await snapshotRotate();
@@ -262,18 +262,6 @@ async function snapshotCreate(){
     console.error('sauvegarde automatique impossible :', e);
     return null;
   }
-}
-
-/* Date encodée dans un nom de sauvegarde (null si illisible). */
-function snapshotTime(name){
-  const m = name.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2})h(\d{2})m(\d{2})s(\d{2})?/);
-  if(!m) return null;
-  return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]);
-}
-
-async function snapshotLatestKey(){
-  const keys = (await snapshotKeys()).sort();
-  return keys.length ? keys[keys.length - 1] : null;
 }
 
 async function snapshotKeys(){

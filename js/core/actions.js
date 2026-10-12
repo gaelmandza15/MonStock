@@ -18,6 +18,15 @@ document.addEventListener('click', async e=>{
       const p = prod(id);
       db.products = db.products.filter(x=>x.id!==id);
       ui.cart = ui.cart.filter(l=>l.productId!==id);
+      /* Les mouvements et lignes de facture du produit partent avec lui :
+         sinon ils restent orphelins en mémoire et l'écriture suivante échoue
+         sur la contrainte de clé étrangère (plus aucune sauvegarde). */
+      db.movements = db.movements.filter(m => m.productId !== id);
+      if(Array.isArray(db.invoices)){
+        db.invoices.forEach(inv => {
+          if(Array.isArray(inv.lines)) inv.lines = inv.lines.filter(l => l.productId !== id);
+        });
+      }
       ui.confirmDel = null; save(); renderPage();
       toast(t('products.deleteDone', { name: esc(p.name) }), 'warn'); break;
     }
@@ -106,7 +115,6 @@ document.addEventListener('change', e=>{
   if(e.target.id === 'inv-status'){ ui.invStatus = e.target.value; renderInvoices(); icons(); }
   if(e.target.id === 'set-lang-sidebar' || e.target.id === 'set-lang-mobile'){ setLang(e.target.value); }
   if(e.target.id === 'set-currency'){ const d = e.target.selectedOptions[0].dataset.d; if(d!==undefined) $('#set-decimals').value = d; }
-  if(e.target.id === 'set-backup-window'){ setBackupWindow(e.target.value); toast(t('settings.backupWindowSaved')); }
   if(e.target.dataset?.action === 'cart-set'){ cartSetQty(e.target.dataset.id, parseFloat(e.target.value)); }
 });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeLayer(); });

@@ -103,7 +103,13 @@ async function writeFullDb(data){
     await tExec('INSERT INTO products(id,name,category,unit,sku,cost,price,stock,threshold) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9);',
       bindParams([p.id, p.name, p.category, p.unit, p.sku || '', p.cost, p.price, p.stock, p.threshold ?? null]));
   }
+  /* Les références à un produit absent sont écartées plutôt que de faire
+     échouer l'écriture : un mouvement orphelin ne doit pas empêcher
+     l'enregistrement et la sauvegarde de tout le reste. */
+  const connus = new Set((data.products || []).map(p => p.id));
+  let orphelins = 0;
   for(const m of (data.movements || [])){
+    if(!connus.has(m.productId)){ orphelins++; continue; }
     await tExec('INSERT INTO movements(id,type,product_id,qty,unit_price,date,sale_id,note) VALUES(?1,?2,?3,?4,?5,?6,?7,?8);',
       bindParams([m.id, m.type, m.productId, m.qty, m.unitPrice, m.date, m.saleId || null, m.note || '']));
   }
@@ -111,10 +117,14 @@ async function writeFullDb(data){
     await tExec('INSERT INTO invoices(id,number,date,customer,status,sale_id,note) VALUES(?1,?2,?3,?4,?5,?6,?7);',
       bindParams([inv.id, inv.number, inv.date, inv.customer || '', inv.status || 'sent', inv.saleId || null, inv.note || '']));
     for(const l of (inv.lines || [])){
+      /* La ligne garde son libellé même si le produit a été supprimé : seul le
+         lien vers le produit est rompu, l'historique de la facture reste lisible. */
+      const pid = (l.productId && connus.has(l.productId)) ? l.productId : null;
       await tExec('INSERT INTO invoice_lines(invoice_id,product_id,name,unit,qty,price) VALUES(?1,?2,?3,?4,?5,?6);',
-        bindParams([inv.id, l.productId || null, l.name || '', l.unit || '', l.qty, l.price]));
+        bindParams([inv.id, pid, l.name || '', l.unit || '', l.qty, l.price]));
     }
   }
+  if(orphelins) console.warn(orphelins + ' movement(s) without product: skipped on save.');
 }
 
 async function readFullDb(){
@@ -196,8 +206,7 @@ const SNAPSHOT_MAX = 50;
 
 async function snapshotCreate(){
   try{
-    const name = await window.__TAURI__.core.invoke('snapshot_create', { windowSecs: backupWindow() });
-    return name;
+    return await window.__TAURI__.core.invoke('snapshot_create');
   }catch(e){
     /* Une sauvegarde manquée ne doit jamais faire échouer l'enregistrement. */
     console.error('sauvegarde automatique impossible :', e);
