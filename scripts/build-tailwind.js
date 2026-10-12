@@ -44,11 +44,18 @@ cfg.safelist = [
 
 fs.writeFileSync(cfgPath, 'module.exports = ' + JSON.stringify(cfg, null, 2) + ';');
 
-/* 4. Appel de l'exécutable tailwindcss (CLI du paquet dev-dependency) */
+/* 4. Appel de l'exécutable tailwindcss (CLI du paquet dev-dependency).
+   Sous Windows, npm installe un lanceur « tailwind.cmd » (et non un fichier
+   « tailwind » sans extension, seul exécutable direct) : on passe par le
+   script Node du paquet, identique au .cmd, pour rester portable. */
 const { execFileSync } = require('child_process');
-const bin = path.join(root, 'node_modules', '.bin', 'tailwind');
+const bin = path.join(root, 'node_modules', 'tailwindcss', 'lib', 'cli.js');
+if (!fs.existsSync(bin)) {
+  console.error('tailwindcss introuvable — lancer : npm install');
+  process.exit(1);
+}
 try {
-  execFileSync(bin, ['-c', cfgPath, '-o', path.join(root, 'vendor/tailwind.css'), '--minify'],
+  execFileSync(process.execPath, [bin, '-c', cfgPath, '-o', path.join(root, 'vendor/tailwind.css'), '--minify'],
     { cwd: root, stdio: 'inherit' });
 } finally {
   fs.unlinkSync(cfgPath);

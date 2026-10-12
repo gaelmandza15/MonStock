@@ -1,2 +1,9 @@
 node_modules/
 dist/
+
+# Tauri : artefacts de compilation et fichiers générés
+src-tauri/target/
+src-tauri/gen/
+
+# Outils locaux
+.zcode/

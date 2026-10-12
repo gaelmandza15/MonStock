@@ -96,7 +96,7 @@ function bindParams(arr){
 async function writeFullDb(data){
   await tExec('DELETE FROM invoice_lines; DELETE FROM invoices; DELETE FROM movements; DELETE FROM products; DELETE FROM settings;', []);
   const st = data.settings || {};
-  await tExec('INSERT INTO settings(id,shop_name,currency,decimals,default_threshold,tax_rate,address,phone,email) VALUES(1,?2,?3,?4,?5,?6,?7,?8,?9);',
+  await tExec('INSERT INTO settings(id,shop_name,currency,decimals,default_threshold,tax_rate,address,phone,email) VALUES(1,?1,?2,?3,?4,?5,?6,?7,?8);',
     bindParams([st.shopName || '', st.currency || 'FCFA', st.decimals ?? 0, st.defaultThreshold ?? 5,
                 st.taxRate ?? 0, st.shopAddress || '', st.shopPhone || '', st.shopEmail || '']));
   for(const p of (data.products || [])){

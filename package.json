@@ -5,7 +5,7 @@
   "description": "KlarStock — gestion de stock 100 % hors ligne (web + bureau Tauri)",
   "scripts": {
     "dev": "node scripts/dev-server.js",
-    "build": "node scripts/build-tailwind.js && node scripts/build-icons.js",
+    "build": "node scripts/build-tailwind.js && node scripts/build-icons.js && node scripts/build-dist.js",
     "test": "node scripts/test-sqlite.js",
     "i18n-check": "node scripts/i18n-check.js",
     "tauri": "tauri",

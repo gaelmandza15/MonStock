@@ -2,7 +2,7 @@
 //! Persistance : rusqlite (SQLite bundled, 100 % hors ligne) + config JSON.
 //! Les commandes invoke() correspondent à js/core/sqlite-tauri.js et js/core/storage.js.
 
-use rusqlite::{types::ValueRef, Connection};
+use rusqlite::{types::ValueRef, Connection, DatabaseName};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -75,30 +75,40 @@ fn db_query(state: State<DbState>, sql: String, params: Vec<serde_json::Value>) 
     let mut rows = Vec::new();
     let mut mapped = stmt.query(rusqlite::params_from_iter(bound.iter())).map_err(|e| e.to_string())?;
     while let Some(row) = mapped.next().map_err(|e| e.to_string())? {
-        let mut v = Vec::with_capacity(cols.len());
-        for i in 0..cols.len() {
-            v.push(match row.get_ref(i).map_err(|e| e.to_string())? {
+        // Chaque ligne est un objet { colonne: valeur } : c'est la forme que
+        // consomme readFullDb() côté JS (srow.shop_name, r.id, …).
+        let mut obj = serde_json::Map::with_capacity(cols.len());
+        for (i, name) in cols.iter().enumerate() {
+            let v = match row.get_ref(i).map_err(|e| e.to_string())? {
                 ValueRef::Null => serde_json::Value::Null,
                 ValueRef::Integer(n) => serde_json::Value::from(n),
                 ValueRef::Real(f) => serde_json::Value::from(f),
                 ValueRef::Text(s) => serde_json::Value::from(String::from_utf8_lossy(s).to_string()),
                 ValueRef::Blob(_) => serde_json::Value::Null, // blobs non utilisés par le schéma
-            });
+            };
+            obj.insert(name.clone(), v);
         }
-        rows.push(v);
+        rows.push(serde_json::Value::Object(obj));
     }
-    // Format { columns, values } identique à sql.js pour rester compatible.
-    Ok(serde_json::json!({ "columns": cols, "values": rows }))
+    Ok(serde_json::Value::Array(rows))
 }
 
 #[tauri::command]
 fn db_exec(state: State<DbState>, sql: String, params: Vec<serde_json::Value>) -> Result<(), String> {
     let bound: Vec<rusqlite::types::Value> = params.into_iter().map(to_value).collect();
     let conn = state.conn.lock().map_err(|_| "mutex poisoned".to_string())?;
-    conn.execute_batch(&sql)
-        .or_else(|_| conn.execute(&sql, rusqlite::params_from_iter(bound.iter())).map(|_| ()))
-        .map_err(|e| e.to_string())?;
-    Ok(())
+    /* Deux cas distincts, à ne pas confondre :
+       - avec paramètres : une seule instruction, les valeurs doivent être liées
+         (execute_batch n'exécute pas de liaison) ;
+       - sans paramètre : script complet possible (schéma, suppressions en série). */
+    let res = if bound.is_empty() {
+        conn.execute_batch(&sql).map_err(|e| e.to_string())
+    } else {
+        conn.execute(&sql, rusqlite::params_from_iter(bound.iter()))
+            .map(|_| ())
+            .map_err(|e| e.to_string())
+    };
+    res
 }
 
 fn to_value(j: serde_json::Value) -> rusqlite::types::Value {
@@ -123,10 +133,10 @@ fn db_bytes(state: State<DbState>) -> Result<Vec<u8>, String> {
     // Sauvegarde cohérente via la fonction backup() de SQLite (pas un simple read).
     let conn = state.conn.lock().map_err(|_| "mutex poisoned".to_string())?;
     let tmp = state.path.with_extension("export.tmp");
-    {
-        let dst = Connection::open(&tmp).map_err(|e| e.to_string())?;
-        conn.backup(&dst, rusqlite::MainName, -1).map_err(|e| e.to_string())?;
-    }
+    // backup() ouvre lui-même la destination ; il faut repartir d'un fichier propre.
+    let _ = fs::remove_file(&tmp);
+    conn.backup(DatabaseName::Main, &tmp, None)
+        .map_err(|e| e.to_string())?;
     let bytes = fs::read(&tmp).map_err(|e| e.to_string())?;
     let _ = fs::remove_file(&tmp);
     Ok(bytes)

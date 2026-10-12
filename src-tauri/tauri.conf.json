@@ -4,14 +4,16 @@
   "version": "1.0.0",
   "identifier": "app.klarstock.desktop",
   "build": {
-    "frontendDist": "../",
+    "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
+        "label": "main",
         "title": "KlarStock — Gestion de stock",
         "width": 1280,
         "height": 800,

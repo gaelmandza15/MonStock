@@ -1,12 +1,17 @@
 /* ════════════════ dev-server.js — serveur HTTP local minimal (127.0.0.1) ════════════════
  * Utilisé par `npm run dev` et Tauri (`devUrl`). Aucun paquet externe :
  * uniquement le module http de Node. Sert les fichiers statiques du projet.
+ * Si dist/ existe (sortie de `npm run build`), il est servi en priorité :
+ * c'est ce dossier que Tauri embarque en production, on développe donc sur
+ * la même arborescence.
  */
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.join(__dirname, '..');
+const BASE = path.join(__dirname, '..');
+const DIST = path.join(BASE, 'dist');
+const ROOT = fs.existsSync(path.join(DIST, 'index.html')) ? DIST : BASE;
 const PORT = Number(process.env.PORT || 1420);
 const HOST = '127.0.0.1';
 

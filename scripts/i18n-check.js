@@ -49,9 +49,12 @@ function listFiles() {
     } catch (e) { console.error('Impossible de lire le dépôt Git :', e.message); process.exit(1); }
   }
   const out = [];
+  /* Dossiers ignorés : dépôts et sorties générées (dist/ copie les dictionnaires,
+     src-tauri/ est le noyau Rust, vendor/ des ressources tierces). */
+  const SKIP = new Set(['.git', 'node_modules', 'dist', 'target', 'vendor', '.zcode']);
   (function walk(dir) {
     for (const name of fs.readdirSync(dir)) {
-      if (name === '.git' || name === 'node_modules') continue;
+      if (SKIP.has(name)) continue;
       const p = path.join(dir, name);
       fs.statSync(p).isDirectory() ? walk(p) : out.push(rel(p));
     }
