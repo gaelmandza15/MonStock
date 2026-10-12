@@ -188,6 +188,7 @@ async function dbSave(data){
   if(!sqliteDb){ saveLegacy(data); return; }
   writeFullDb(data);
   await persist();
+  await snapshotCreate();   /* copie horodatée après chaque écriture réussie */
 }
 
 async function dbReset(demo){
@@ -219,6 +220,87 @@ async function dbStorageInfo(){
   if(!navigator.storage || !navigator.storage.estimate) return null;
   const e = await navigator.storage.estimate();
   return { usage: e.usage || 0, quota: e.quota || 0 };
+}
+
+/* ---------- sauvegardes automatiques ----------
+   Même contrat que le mode bureau (js/core/sqlite-tauri.js) : une copie
+   horodatée à chaque écriture, 50 conservées au maximum. Ici les copies
+   vivent dans le magasin IndexedDB, sous la clé « snap:<horodatage> ». */
+const SNAPSHOT_MAX = 50;
+
+/* Horodatage local trié lexicographiquement, comme le nom de fichier côté Rust.
+   Les centièmes distinguent deux écritures rapprochées. */
+function snapshotStamp(){
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const centis = p(Math.floor(d.getMilliseconds() / 10));
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`
+       + `T${p(d.getHours())}h${p(d.getMinutes())}m${p(d.getSeconds())}s${centis}`;
+}
+
+async function snapshotCreate(){
+  try{
+    if(!sqliteDb) return null;
+    const name = snapshotStamp() + '.db';
+    await idbPut('snap:' + name, sqliteDb.export());
+    await snapshotRotate();
+    return name;
+  }catch(e){
+    /* Une sauvegarde manquée ne doit jamais faire échouer l'enregistrement. */
+    console.error('sauvegarde automatique impossible :', e);
+    return null;
+  }
+}
+
+async function snapshotKeys(){
+  const idb = await openIdb();
+  return new Promise((resolve, reject)=>{
+    const rq = idb.transaction('files','readonly').objectStore('files').getAllKeys();
+    rq.onsuccess = ()=> resolve(rq.result.filter(k => typeof k === 'string' && k.startsWith('snap:')));
+    rq.onerror = ()=> reject(rq.error);
+  });
+}
+
+async function snapshotRotate(){
+  const keys = (await snapshotKeys()).sort();
+  if(keys.length <= SNAPSHOT_MAX) return;
+  const idb = await openIdb();
+  for(const k of keys.slice(0, keys.length - SNAPSHOT_MAX)){
+    await new Promise((resolve)=>{
+      const tx = idb.transaction('files','readwrite');
+      tx.objectStore('files').delete(k);
+      tx.oncomplete = resolve; tx.onerror = resolve;
+    });
+  }
+}
+
+async function snapshotList(){
+  try{
+    const keys = (await snapshotKeys()).sort().reverse();   /* plus récent d'abord */
+    const out = [];
+    for(const k of keys){
+      const bytes = await idbGet(k);
+      out.push({ name: k.slice('snap:'.length), size: bytes ? bytes.length : 0 });
+    }
+    return out;
+  }catch(e){ return []; }
+}
+
+async function snapshotRestore(name){
+  const bytes = await idbGet('snap:' + name);
+  if(!bytes || bytes.length < 16) throw new Error('sauvegarde introuvable');
+  if(sqliteDb) sqliteDb.close();
+  sqliteDb = new SQL.Database(bytes);
+  createSchema();
+  await persist();
+}
+
+async function snapshotDelete(name){
+  const idb = await openIdb();
+  return new Promise((resolve, reject)=>{
+    const tx = idb.transaction('files','readwrite');
+    tx.objectStore('files').delete('snap:' + name);
+    tx.oncomplete = resolve; tx.onerror = ()=> reject(tx.error);
+  });
 }
 
 /* repli si SQLite n'a pas pu démarrer (wasm indisponible, vieux navigateur…) */

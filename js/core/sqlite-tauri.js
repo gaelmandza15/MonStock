@@ -155,6 +155,7 @@ async function dbLoad(){
 async function dbSave(data){
   if(!sqliteDb){ saveLegacy(data); return; }
   await writeFullDb(data);
+  await snapshotCreate();   /* copie horodatée après chaque écriture réussie */
 }
 
 async function dbReset(demo){
@@ -184,6 +185,34 @@ async function dbStorageInfo(){
   /* quota absent : sur le disque il n'y a pas de plafond à afficher.
      L'interface distingue les deux cas (voir refreshStorageInfo). */
   return { usage: bytes, quota: null };
+}
+
+/* ---------- sauvegardes automatiques (voir l'équivalent dans sqlite.js) ---------- */
+const SNAPSHOT_MAX = 50;
+
+async function snapshotCreate(){
+  try{
+    const name = await window.__TAURI__.core.invoke('snapshot_create');
+    return name;
+  }catch(e){
+    /* Une sauvegarde manquée ne doit jamais faire échouer l'enregistrement. */
+    console.error('sauvegarde automatique impossible :', e);
+    return null;
+  }
+}
+async function snapshotList(){
+  try{
+    const list = await window.__TAURI__.core.invoke('snapshot_list');
+    return list.map(s => ({ name: s.name, size: s.size }));
+  }catch(e){ return []; }
+}
+async function snapshotRestore(name){
+  await window.__TAURI__.core.invoke('snapshot_restore', { name });
+  sqliteDb = { tauri: true };          /* la connexion a ete remplacee cote Rust */
+  await createSchema();
+}
+async function snapshotDelete(name){
+  await window.__TAURI__.core.invoke('snapshot_delete', { name });
 }
 
 /* repli (le localStorage existe aussi sous la WebView Tauri) */

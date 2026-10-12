@@ -128,15 +128,19 @@ fn to_value(j: serde_json::Value) -> rusqlite::types::Value {
     }
 }
 
+/* Copie cohérente de la base ouverte vers un fichier, via la fonction backup()
+   de SQLite (et non une simple lecture, qui pourrait capturer un état partiel). */
+fn write_consistent_copy(conn: &Connection, dst: &PathBuf) -> Result<(), String> {
+    let _ = fs::remove_file(dst);
+    conn.backup(DatabaseName::Main, dst, None)
+        .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn db_bytes(state: State<DbState>) -> Result<Vec<u8>, String> {
-    // Sauvegarde cohérente via la fonction backup() de SQLite (pas un simple read).
     let conn = state.conn.lock().map_err(|_| "mutex poisoned".to_string())?;
     let tmp = state.path.with_extension("export.tmp");
-    // backup() ouvre lui-même la destination ; il faut repartir d'un fichier propre.
-    let _ = fs::remove_file(&tmp);
-    conn.backup(DatabaseName::Main, &tmp, None)
-        .map_err(|e| e.to_string())?;
+    write_consistent_copy(&conn, &tmp)?;
     let bytes = fs::read(&tmp).map_err(|e| e.to_string())?;
     let _ = fs::remove_file(&tmp);
     Ok(bytes)
@@ -163,6 +167,125 @@ fn db_size(state: State<DbState>) -> Result<u64, String> {
         .query_row("PRAGMA page_size", [], |r| r.get(0))
         .unwrap_or(0);
     Ok((pages * page_size) as u64)
+}
+
+/* ---------- sauvegardes automatiques (snapshots horodatés) ----------
+   Une copie de la base est prise à chaque écriture. Les 50 plus récentes sont
+   conservées ; au-delà, les plus anciennes sont supprimées. Elles vivent dans
+   un sous-dossier « backups » à côté de la base, et survivent donc à un
+   effacement des données. */
+
+const MAX_SNAPSHOTS: usize = 50;
+
+fn backups_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = db_path(app)?.with_file_name("backups");
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+
+/* Nom d'un snapshot : horodatage trié lexicographiquement (heure locale).
+   Les centièmes de seconde distinguent deux écritures rapprochées, qui
+   partageraient sinon le même nom et s'écraseraient. */
+fn snapshot_name() -> String {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let secs = (now / 1000) as i64;
+    let centis = ((now % 1000) / 10) as u32;
+    let days = secs / 86400;
+    let rem = secs % 86400;
+    // conversion jours -> date (algorithme civil_from_days, sans dépendance)
+    let z = days + 719468;
+    let era = if z >= 0 { z } else { z - 146096 } / 146097;
+    let doe = z - era * 146097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    format!(
+        "{:04}-{:02}-{:02}T{:02}h{:02}m{:02}s{:02}.db",
+        y, m, d, rem / 3600, (rem % 3600) / 60, rem % 60, centis
+    )
+}
+
+#[tauri::command]
+fn snapshot_create(app: AppHandle) -> Result<String, String> {
+    let dir = backups_dir(&app)?;
+    let conn = app.state::<DbState>();
+    let conn = conn.conn.lock().map_err(|_| "mutex poisoned".to_string())?;
+    let name = snapshot_name();
+    let dst = dir.join(&name);
+    write_consistent_copy(&conn, &dst)?;
+    // rotation : ne garder que les MAX_SNAPSHOTS plus récents
+    let mut files: Vec<PathBuf> = fs::read_dir(&dir)
+        .map_err(|e| e.to_string())?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().map(|x| x == "db").unwrap_or(false))
+        .collect();
+    files.sort();
+    if files.len() > MAX_SNAPSHOTS {
+        for old in &files[..files.len() - MAX_SNAPSHOTS] {
+            let _ = fs::remove_file(old);
+        }
+    }
+    Ok(name)
+}
+
+#[tauri::command]
+fn snapshot_list(app: AppHandle) -> Result<Vec<serde_json::Value>, String> {
+    let dir = backups_dir(&app)?;
+    let mut out = Vec::new();
+    for entry in fs::read_dir(&dir).map_err(|e| e.to_string())? {
+        let e = match entry { Ok(e) => e, Err(_) => continue };
+        let p = e.path();
+        if p.extension().map(|x| x != "db").unwrap_or(true) {
+            continue;
+        }
+        let name = e.file_name().to_string_lossy().to_string();
+        let size = e.metadata().map(|m| m.len()).unwrap_or(0);
+        out.push(serde_json::json!({ "name": name, "size": size }));
+    }
+    // plus récent en premier
+    out.sort_by(|a, b| {
+        let an = a["name"].as_str().unwrap_or("");
+        let bn = b["name"].as_str().unwrap_or("");
+        bn.cmp(an)
+    });
+    Ok(out)
+}
+
+#[tauri::command]
+fn snapshot_restore(app: AppHandle, name: String) -> Result<(), String> {
+    // Le nom vient du client : on refuse tout chemin pour rester dans le dossier.
+    if name.contains('/') || name.contains('\\') || name.contains("..") {
+        return Err("nom invalide".into());
+    }
+    let src = backups_dir(&app)?.join(&name);
+    if !src.exists() {
+        return Err("sauvegarde introuvable".into());
+    }
+    let bytes = fs::read(&src).map_err(|e| e.to_string())?;
+    if bytes.len() < 16 || &bytes[0..15] != b"SQLite format 3" {
+        return Err("fichier de sauvegarde invalide".into());
+    }
+    let state = app.state::<DbState>();
+    let mut guard = state.conn.lock().map_err(|_| "mutex poisoned".to_string())?;
+    fs::write(&state.path, &bytes).map_err(|e| e.to_string())?;
+    *guard = open_conn(&state.path)?;
+    Ok(())
+}
+
+#[tauri::command]
+fn snapshot_delete(app: AppHandle, name: String) -> Result<(), String> {
+    if name.contains('/') || name.contains('\\') || name.contains("..") {
+        return Err("nom invalide".into());
+    }
+    let p = backups_dir(&app)?.join(&name);
+    fs::remove_file(&p).map_err(|e| e.to_string())
 }
 
 /* ---------- config (langue, drapeaux) ---------- */
@@ -219,7 +342,11 @@ pub fn run() {
             db_size,
             load_config,
             save_config,
-            write_file_bytes
+            write_file_bytes,
+            snapshot_create,
+            snapshot_list,
+            snapshot_restore,
+            snapshot_delete
         ])
         .run(tauri::generate_context!())
         .expect("erreur pendant l'exécution de KlarStock");

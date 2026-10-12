@@ -16,6 +16,7 @@ eye
 file-spreadsheet
 hand-coins
 hard-drive
+history
 layout-dashboard
 menu
 minus

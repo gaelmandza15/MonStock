@@ -394,10 +394,15 @@ if(!window.__KLAR_TAURI__){
               <input id="import-db-file" type="file" accept=".db,application/vnd.sqlite3,application/x-sqlite3" class="hidden">
             </details>
           </div>
+          <div class="bg-white rounded-3xl p-6">
+            <h2 class="font-bold flex items-center gap-2"><i data-lucide="history" class="w-[18px] h-[18px] text-accent"></i><span data-i18n="settings.snapshotsCard">Sauvegardes automatiques</span></h2>
+            <p class="text-xs text-muted mt-1.5" data-i18n="settings.snapshotsHint">Une copie horodatée est créée à chaque modification. Les 50 plus récentes sont conservées.</p>
+            <div id="snapshots-list" class="mt-4 space-y-2 max-h-[280px] overflow-y-auto"></div>
+          </div>
           <div class="bg-danger-soft border border-danger/15 rounded-3xl p-6">
-            <h2 class="font-bold flex items-center gap-2 text-danger"><i data-lucide="triangle-alert" class="w-[18px] h-[18px]"></i>Zone sensible</h2>
-            <p class="text-xs text-danger/80 mt-1.5">Efface toutes les données de cet appareil, ou recharge le jeu de démonstration.</p>
-            <button data-action="reset-data" class="mt-4 bg-danger hover:brightness-95 text-white font-semibold text-sm px-5 py-2.5 rounded-xl">Réinitialiser les données</button>
+            <h2 class="font-bold flex items-center gap-2 text-danger"><i data-lucide="triangle-alert" class="w-[18px] h-[18px]"></i><span data-i18n="reset.card">Zone sensible</span></h2>
+            <p class="text-xs text-danger/80 mt-1.5" data-i18n="reset.hint">Efface toutes les données de cet appareil, ou recharge le jeu de démonstration. Vos sauvegardes automatiques, vos préférences et votre licence sont conservées.</p>
+            <button data-action="reset-data" class="mt-4 bg-danger hover:brightness-95 text-white font-semibold text-sm px-5 py-2.5 rounded-xl" data-i18n="reset.button">Réinitialiser les données</button>
           </div>
         </div>
       </div>

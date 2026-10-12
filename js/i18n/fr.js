@@ -366,11 +366,24 @@ const I18N_FR = {
   'settings.migrationToast': 'Données migrées vers la base SQLite.',
 
   'reset.title': 'Réinitialiser les données',
-  'reset.sub': 'Cette action est irréversible.',
+  'reset.sub': 'Une sauvegarde automatique est créée avant l\'opération.',
+  'reset.card': 'Zone sensible',
+  'reset.hint': 'Efface toutes les données de cet appareil, ou recharge le jeu de démonstration. Vos sauvegardes automatiques, vos préférences et votre licence sont conservées.',
+  'reset.button': 'Réinitialiser les données',
   'reset.loadDemo': 'Recharger les données de démonstration',
   'reset.wipeAll': 'Tout effacer (boutique vide)',
   'reset.demoLoaded': 'Données de démonstration rechargées',
   'reset.wiped': 'Toutes les données ont été effacées',
+
+  'settings.snapshotsCard': 'Sauvegardes automatiques',
+  'settings.snapshotsHint': 'Une copie horodatée est créée à chaque modification. Les 50 plus récentes sont conservées.',
+  'settings.snapshotsEmpty': 'Aucune sauvegarde pour le moment.',
+  'settings.snapshotLatest': 'la plus récente',
+  'settings.snapshotRestore': 'Restaurer',
+  'settings.snapshotDelete': 'Supprimer',
+  'settings.snapshotRestored': 'Données restaurées : {date}',
+  'settings.snapshotRestoreFailed': 'Restauration impossible : sauvegarde illisible.',
+  'settings.snapshotDeleted': 'Sauvegarde supprimée.',
 
   'welcome.toast': 'Bienvenue ! Des données de démonstration sont chargées — effacez-les depuis <b>Paramètres</b>.',
 

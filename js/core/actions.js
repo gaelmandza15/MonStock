@@ -41,6 +41,8 @@ document.addEventListener('click', async e=>{
     case 'invoice-edit': openEditInvoice(id); break;
     case 'invoice-del': deleteInvoice(id); break;
     case 'export-invoices-csv': exportInvoicesCsv(); break;
+    case 'snapshot-restore': await restoreSnapshot(el.dataset.name); break;
+    case 'snapshot-del': await deleteSnapshot(el.dataset.name); break;
     case 'mv-type': ui.mvType = el.dataset.v; renderMovements(); icons(); break;
 
     case 'save-settings': saveSettings(); break;
@@ -80,8 +82,8 @@ document.addEventListener('click', async e=>{
         <button data-action="load-demo" class="w-full bg-accent hover:bg-accent-dark text-white font-bold text-sm py-3 rounded-xl">${t('reset.loadDemo')}</button>
         <button data-action="wipe-all" class="w-full bg-danger hover:brightness-95 text-white font-bold text-sm py-3 rounded-xl">${t('reset.wipeAll')}</button>
         <button data-action="close-layer" class="w-full border border-line text-muted hover:text-ink font-semibold text-sm py-2.5 rounded-xl">${t('form.cancel')}</button></div>`); break;
-    case 'load-demo': db = seed(true); await dbReset(db); closeLayer(); navigate('dashboard'); toast(t('reset.demoLoaded')); break;
-    case 'wipe-all': db = seed(false); await dbReset(db); closeLayer(); navigate('dashboard'); toast(t('reset.wiped'), 'warn'); break;
+    case 'load-demo': await snapshotCreate(); db = seed(true); await dbReset(db); closeLayer(); navigate('dashboard'); toast(t('reset.demoLoaded')); break;
+    case 'wipe-all': await snapshotCreate(); db = seed(false); await dbReset(db); closeLayer(); navigate('dashboard'); toast(t('reset.wiped'), 'warn'); break;
   }
 });
 
