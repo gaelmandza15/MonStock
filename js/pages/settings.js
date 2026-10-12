@@ -34,14 +34,20 @@ function saveSettings(){
   refreshStorageInfo();
 }
 
-/* Indicateur d'espace occupé par la base SQLite (navigateur). */
+/* Indicateur d'espace occupé par la base SQLite.
+   Navigateur : usage et quota fournis par l'API Storage.
+   Bureau (Tauri) : la base est un fichier sur le disque, sans quota — on
+   n'affiche donc que sa taille (voir dbStorageInfo). */
 async function refreshStorageInfo(){
   const el = $('#storage-info'); if(!el) return;
   const info = await dbStorageInfo();
   if(!info){ el.textContent = ''; return; }
-  const fmtB = n => n >= 1048576 ? (n/1048576).toFixed(1) + ' MB'
+  const fmtB = n => n >= 1073741824 ? (n/1073741824).toFixed(0) + ' GB'
+                : n >= 1048576 ? Math.round(n/1048576) + ' MB'
                 : n >= 1024 ? Math.round(n/1024) + ' KB' : n + ' B';
-  el.textContent = t('settings.storageUsed', { used: fmtB(info.usage), quota: fmtB(info.quota) });
+  el.textContent = info.quota
+    ? t('settings.storageUsed', { used: fmtB(info.usage), quota: fmtB(info.quota) })
+    : t('settings.storageSize', { size: fmtB(info.usage) });
 }
 
 function downloadFile(name, content, mime){

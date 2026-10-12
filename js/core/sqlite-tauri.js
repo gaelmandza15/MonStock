@@ -181,7 +181,9 @@ async function dbImportDb(file){
 
 async function dbStorageInfo(){
   const bytes = await window.__TAURI__.core.invoke('db_size');
-  return { usage: bytes, quota: bytes };   /* disque : pas de quota -> "sur" sera identique */
+  /* quota absent : sur le disque il n'y a pas de plafond à afficher.
+     L'interface distingue les deux cas (voir refreshStorageInfo). */
+  return { usage: bytes, quota: null };
 }
 
 /* repli (le localStorage existe aussi sous la WebView Tauri) */
