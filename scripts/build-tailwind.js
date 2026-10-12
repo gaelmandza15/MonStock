@@ -18,11 +18,12 @@ const cfgPath = path.join(root, 'scripts/.tailwind.node-config.js');
 fs.writeFileSync(cfgPath, src);
 const cfg = require(cfgPath);
 
-/* 2. Sources scannées */
-cfg.content = [
-  path.join(root, 'index.html'),
-  path.join(root, 'js/**/*.js'),
-];
+/* 2. Sources scannées.
+   Chemins en slashes et relatifs : Tailwind les passe à fast-glob, qui
+   n'interprète pas les antislashs de Windows (un motif « js\**\*.js » ne
+   correspond à aucun fichier). Le répertoire de travail est la racine du
+   projet (voir l'appel du CLI plus bas), donc ces motifs restent valides. */
+cfg.content = ['index.html', 'js/**/*.js'];
 
 /* 3. Safelist : classes générées dynamiquement (introuvables par le scanner) */
 cfg.safelist = [
@@ -47,17 +48,37 @@ fs.writeFileSync(cfgPath, 'module.exports = ' + JSON.stringify(cfg, null, 2) + '
 /* 4. Appel de l'exécutable tailwindcss (CLI du paquet dev-dependency).
    Sous Windows, npm installe un lanceur « tailwind.cmd » (et non un fichier
    « tailwind » sans extension, seul exécutable direct) : on passe par le
-   script Node du paquet, identique au .cmd, pour rester portable. */
+   script Node du paquet, identique au .cmd, pour rester portable.
+   Le CLI exige un fichier d'entrée : sans « -i », il s'arrête en annonçant
+   seulement « Specified input file nul does not exist » — et peut sortir
+   avec le code 0, ce qui avait laissé croire à une régénération réussie. */
 const { execFileSync } = require('child_process');
 const bin = path.join(root, 'node_modules', 'tailwindcss', 'lib', 'cli.js');
+const out = path.join(root, 'vendor/tailwind.css');
 if (!fs.existsSync(bin)) {
   console.error('tailwindcss introuvable — lancer : npm install');
   process.exit(1);
 }
+/* Un fichier d'entrée minimal portant les directives Tailwind. */
+const inputPath = path.join(root, 'scripts/.tailwind.input.css');
+fs.writeFileSync(inputPath, '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n');
+
 try {
-  execFileSync(process.execPath, [bin, '-c', cfgPath, '-o', path.join(root, 'vendor/tailwind.css'), '--minify'],
+  execFileSync(process.execPath,
+    [bin, '-c', cfgPath, '-i', inputPath, '-o', out, '--minify'],
     { cwd: root, stdio: 'inherit' });
 } finally {
   fs.unlinkSync(cfgPath);
+  fs.unlinkSync(inputPath);
 }
-console.log('vendor/tailwind.css régénéré.');
+
+/* Contrôle du résultat : le CLI peut se terminer sans rien écrire. */
+if (!fs.existsSync(out) || fs.statSync(out).size < 1000) {
+  console.error('Échec : ' + out + ' n\'a pas été généré correctement.');
+  process.exit(1);
+}
+if (!fs.readFileSync(out, 'utf8').includes('left-3\\.5')) {
+  console.error('Échec : classes attendues absentes du CSS (scan des sources incomplet).');
+  process.exit(1);
+}
+console.log('vendor/tailwind.css régénéré (' + Math.round(fs.statSync(out).size / 1024) + ' ko).');

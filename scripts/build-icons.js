@@ -47,7 +47,14 @@ const code = `${banner}
   function svgFor(name, cls) {
     var d = ICONS[name];
     if (!d) return null;
-    return '<svg xmlns="http://www.w3.org/2000/svg" ' + d + (cls ? ' class="' + cls + '"' : '') + '></svg>';
+    /* d contient « attributs>contenu ». La classe doit être insérée dans la
+       balise d'ouverture, avant le « > » : la placer après d'écrirait
+       class="…" après les enfants, hors de l'élément (classes perdues). */
+    var i = d.indexOf('>');
+    var attrs = d.slice(0, i);
+    var inner = d.slice(i + 1);
+    if (cls) attrs += ' class="' + cls + '"';
+    return '<svg xmlns="http://www.w3.org/2000/svg" ' + attrs + '>' + inner + '</svg>';
   }
   function createIcons(root_) {
     var scope = root_ || document;
