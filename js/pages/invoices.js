@@ -31,7 +31,8 @@ function buildInvoice(saleId, customer){
            customer:(customer || '').trim() || t('invoices.walkIn'), status:'paid', lines };
 }
 
-/* Rattachement / création de facture pour les ventes historiques sans pièce jointe. */
+/* Rattachement / création de facture pour les ventes historiques sans pièce jointe.
+   Écriture de service (déclenchée au rendu) : pas de sauvegarde automatique. */
 function ensureInvoices(){
   let changed = false;
   const seen = new Set(db.invoices.map(i => i.saleId));
@@ -42,7 +43,7 @@ function ensureInvoices(){
     const inv = buildInvoice(sid, '');
     if(inv){ inv.date = bySale[sid][0].date; db.invoices.push(inv); changed = true; }
   });
-  if(changed) save();
+  if(changed) saveSilently();
 }
 
 /* ── Rendu de la page ─────────────────────────────── */

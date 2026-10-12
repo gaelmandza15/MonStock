@@ -152,10 +152,14 @@ async function dbLoad(){
   return readFullDb();
 }
 
-async function dbSave(data){
+async function dbSave(data, opts){
   if(!sqliteDb){ saveLegacy(data); return; }
   await writeFullDb(data);
-  await snapshotCreate();   /* copie horodatée après chaque écriture réussie */
+  /* Les écritures qui précèdent doivent être validées avant la copie, sinon
+     celle-ci échoue sur une base encore verrouillée. */
+  try{ await window.__TAURI__.core.invoke('db_checkpoint'); }catch(_){}
+  /* Copie horodatée, sauf écriture de service (voir saveSilently). */
+  if(!opts || opts.snapshot !== false) await snapshotCreate();
 }
 
 async function dbReset(demo){
@@ -192,7 +196,7 @@ const SNAPSHOT_MAX = 50;
 
 async function snapshotCreate(){
   try{
-    const name = await window.__TAURI__.core.invoke('snapshot_create');
+    const name = await window.__TAURI__.core.invoke('snapshot_create', { windowSecs: backupWindow() });
     return name;
   }catch(e){
     /* Une sauvegarde manquée ne doit jamais faire échouer l'enregistrement. */

@@ -12,7 +12,9 @@
 const IS_TAURI = typeof window !== 'undefined' && !!(window.__TAURI__ || window.__TAURI_INTERNALS__);
 
 /* ---------- Config (synchrone) : clé -> valeur string ---------- */
-const CFG_DEFAULTS = { klarstock_lang: 'fr', klarstock_migrated: '0' };
+/* backup_window : intervalle (en secondes) pendant lequel deux écritures
+   rapprochées partagent la même sauvegarde automatique. Voir snapshotCreate. */
+const CFG_DEFAULTS = { klarstock_lang: 'fr', klarstock_migrated: '0', klarstock_backup_window: '300' };
 const _cfgCache = {};
 let _cfgReady = false;          /* sous Tauri : rempli une fois via async */
 let _cfgDirty = false;
@@ -45,6 +47,17 @@ async function cfgInit(){
     Object.assign(_cfgCache, raw ? JSON.parse(raw) : {});
   }catch(e){ /* premier lancement ou erreur : valeurs par défaut */ }
   _cfgReady = true;
+}
+
+/* Intervalle de regroupement des sauvegardes automatiques, en secondes.
+   0 = une copie par modification, sans regroupement. Réglable depuis les
+   Paramètres et commun aux deux contextes (navigateur et bureau). */
+function backupWindow(){
+  const v = parseInt(cfgGet('klarstock_backup_window'), 10);
+  return isNaN(v) || v < 0 ? 300 : v;
+}
+function setBackupWindow(secs){
+  cfgSet('klarstock_backup_window', String(Math.max(0, parseInt(secs, 10) || 0)));
 }
 
 /* ---------- Base SQLite ----------

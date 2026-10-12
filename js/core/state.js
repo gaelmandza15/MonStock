@@ -22,8 +22,16 @@ const ui = { prodSearch:'', prodCat:'', prodSort:'name', mvType:'all', mvRange:3
              invSearch:'', invStatus:'all' };
 const prevKpi = {};
 
-/* Chargement initial : localStorage (repli / avant migration SQLite). */
-function save(){ dbSave(db); }
+/* Enregistrement des données.
+   La fonction renvoie la promesse de l'écriture : un appelant qui doit
+   attendre la fin (avant de quitter l'écran, d'enchaîner une autre écriture
+   ou de vérifier le résultat) peut faire « await save() ». Sans ce retour,
+   deux écritures rapprochées pouvaient se chevaucher et la sauvegarde
+   automatique de la première n'aboutissait jamais.
+   Une copie d'historique n'est prise que si l'écriture résulte d'une action
+   de l'utilisateur ; les écritures de service passent par saveSilently(). */
+function save(opts){ return dbSave(db, opts); }
+function saveSilently(){ return dbSave(db, { snapshot: false }); }
 function saveLang(){ cfgSet(LS_LANG, lang); }
 function load(){ try{ const r = cfgGet(LS); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }

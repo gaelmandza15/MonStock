@@ -9,6 +9,7 @@ function renderSettings(){
   if(tax) tax.value = db.settings.taxRate || 0;
   $('#set-decimals').value = db.settings.decimals;
   const sto = $('#storage-info'); if(sto) refreshStorageInfo();
+  const bw = $('#set-backup-window'); if(bw) bw.value = String(backupWindow());
   renderSnapshots();
   const known = CURRENCIES.some(c=>c.c===db.settings.currency);
   let html = `<option value="" disabled${known?'':' selected'}>${t('settings.selectCurrency')}</option>`;

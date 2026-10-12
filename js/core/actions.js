@@ -106,6 +106,7 @@ document.addEventListener('change', e=>{
   if(e.target.id === 'inv-status'){ ui.invStatus = e.target.value; renderInvoices(); icons(); }
   if(e.target.id === 'set-lang-sidebar' || e.target.id === 'set-lang-mobile'){ setLang(e.target.value); }
   if(e.target.id === 'set-currency'){ const d = e.target.selectedOptions[0].dataset.d; if(d!==undefined) $('#set-decimals').value = d; }
+  if(e.target.id === 'set-backup-window'){ setBackupWindow(e.target.value); toast(t('settings.backupWindowSaved')); }
   if(e.target.dataset?.action === 'cart-set'){ cartSetQty(e.target.dataset.id, parseFloat(e.target.value)); }
 });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeLayer(); });

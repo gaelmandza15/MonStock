@@ -111,6 +111,18 @@ fn db_exec(state: State<DbState>, sql: String, params: Vec<serde_json::Value>) -
     res
 }
 
+/* Valide explicitement les écritures en attente.
+   Chaque db_exec ouvre sa propre transaction implicite ; sans ce point de
+   validation, le journal reste ouvert et la sauvegarde qui suit (backup())
+   échoue sur une base verrouillée. Marque aussi le moment où les données sont
+   réellement sur le disque. */
+#[tauri::command]
+fn db_checkpoint(state: State<DbState>) -> Result<(), String> {
+    let conn = state.conn.lock().map_err(|_| "mutex poisoned".to_string())?;
+    conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")
+        .map_err(|e| e.to_string())
+}
+
 fn to_value(j: serde_json::Value) -> rusqlite::types::Value {
     use serde_json::Value as J;
     match j {
@@ -212,15 +224,56 @@ fn snapshot_name() -> String {
     )
 }
 
+/* Renomme la sauvegarde la plus récente pour qu'elle reflète l'instant présent.
+   Utilisé quand la fenêtre de regroupement est écoulée et que l'on préfère
+   remplacer plutôt qu'accumuler : voir snapshot_create. */
+fn newest_snapshot(dir: &PathBuf) -> Option<PathBuf> {
+    let mut files: Vec<PathBuf> = fs::read_dir(dir)
+        .ok()?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().map(|x| x == "db").unwrap_or(false))
+        .collect();
+    files.sort();
+    files.pop()
+}
+
 #[tauri::command]
-fn snapshot_create(app: AppHandle) -> Result<String, String> {
+fn snapshot_create(app: AppHandle, window_secs: Option<u64>) -> Result<Option<String>, String> {
     let dir = backups_dir(&app)?;
+    let fenetre = window_secs.unwrap_or(0);
+
+    /* Regroupement : si la dernière sauvegarde date de moins de `fenetre`
+       secondes, on la remplace (nouveau nom, contenu à jour) au lieu d'en
+       ajouter une. Une rafale de modifications ne laisse donc qu'une copie. */
+    if fenetre > 0 {
+        if let Some(derniere) = newest_snapshot(&dir) {
+            if let Ok(meta) = derniere.metadata() {
+                if let Ok(modifie) = meta.modified() {
+                    let age = std::time::SystemTime::now()
+                        .duration_since(modifie)
+                        .map(|d| d.as_secs())
+                        .unwrap_or(u64::MAX);
+                    if age < fenetre {
+                        let _ = fs::remove_file(&derniere);
+                    }
+                }
+            }
+        }
+    }
+
     let conn = app.state::<DbState>();
     let conn = conn.conn.lock().map_err(|_| "mutex poisoned".to_string())?;
     let name = snapshot_name();
     let dst = dir.join(&name);
-    write_consistent_copy(&conn, &dst)?;
-    // rotation : ne garder que les MAX_SNAPSHOTS plus récents
+    /* La base peut être verrouillée par une écriture en cours : on valide puis
+       on réessaie une fois avant d'abandonner. */
+    if let Err(e) = write_consistent_copy(&conn, &dst) {
+        let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
+        write_consistent_copy(&conn, &dst)
+            .map_err(|e2| format!("{e} (nouvelle tentative : {e2})"))?;
+    }
+
+    /* rotation : ne garder que les MAX_SNAPSHOTS plus récents */
     let mut files: Vec<PathBuf> = fs::read_dir(&dir)
         .map_err(|e| e.to_string())?
         .filter_map(|e| e.ok().map(|e| e.path()))
@@ -232,7 +285,7 @@ fn snapshot_create(app: AppHandle) -> Result<String, String> {
             let _ = fs::remove_file(old);
         }
     }
-    Ok(name)
+    Ok(Some(name))
 }
 
 #[tauri::command]
@@ -346,7 +399,8 @@ pub fn run() {
             snapshot_create,
             snapshot_list,
             snapshot_restore,
-            snapshot_delete
+            snapshot_delete,
+            db_checkpoint
         ])
         .run(tauri::generate_context!())
         .expect("erreur pendant l'exécution de KlarStock");

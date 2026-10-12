@@ -184,11 +184,12 @@ async function persist(){
   await idbPut('klarstock.db', sqliteDb.export());
 }
 
-async function dbSave(data){
+async function dbSave(data, opts){
   if(!sqliteDb){ saveLegacy(data); return; }
   writeFullDb(data);
   await persist();
-  await snapshotCreate();   /* copie horodatée après chaque écriture réussie */
+  /* Copie horodatée, sauf écriture de service (voir saveSilently). */
+  if(!opts || opts.snapshot !== false) await snapshotCreate();
 }
 
 async function dbReset(demo){
@@ -240,6 +241,18 @@ function snapshotStamp(){
 async function snapshotCreate(){
   try{
     if(!sqliteDb) return null;
+    /* Regroupement : si la dernière sauvegarde date de moins de
+       backupWindow() secondes, on la remplace au lieu d'en ajouter une. */
+    const fenetre = typeof backupWindow === 'function' ? backupWindow() : 0;
+    if(fenetre > 0){
+      const latest = await snapshotLatestKey();
+      if(latest){
+        const t = snapshotTime(latest.slice('snap:'.length));
+        if(t && (Date.now() - t.getTime()) < fenetre * 1000){
+          await snapshotDelete(latest.slice('snap:'.length));
+        }
+      }
+    }
     const name = snapshotStamp() + '.db';
     await idbPut('snap:' + name, sqliteDb.export());
     await snapshotRotate();
@@ -249,6 +262,18 @@ async function snapshotCreate(){
     console.error('sauvegarde automatique impossible :', e);
     return null;
   }
+}
+
+/* Date encodée dans un nom de sauvegarde (null si illisible). */
+function snapshotTime(name){
+  const m = name.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2})h(\d{2})m(\d{2})s(\d{2})?/);
+  if(!m) return null;
+  return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]);
+}
+
+async function snapshotLatestKey(){
+  const keys = (await snapshotKeys()).sort();
+  return keys.length ? keys[keys.length - 1] : null;
 }
 
 async function snapshotKeys(){
